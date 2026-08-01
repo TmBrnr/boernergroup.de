@@ -34,7 +34,6 @@
     "standard": "WCAG 2.2 level AA",
     "status": "largely conformant",
     "knownGaps": [
-      "Tim Börner hat noch kein Porträt. An seiner Stelle stehen seine Initialen auf einer Kachel, für Screenreader ausgeblendet, weil sein Name direkt daneben steht.",
       "Die animierte Fläche auf der Startseite ist dekorativ und für Hilfstechnik ausgeblendet. Dieselbe Aussage steht dort als normale Überschrift.",
       "Eine Prüfung durch eine externe Stelle steht aus."
     ]
