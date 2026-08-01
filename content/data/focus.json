@@ -1,0 +1,32 @@
+[
+  {
+    "title": "Artificial Intelligence",
+    "body": "Systems that turn unstructured data into decisions people can defend. Multimodal extraction, audio intelligence, sensor fusion.",
+    "metric": "Core"
+  },
+  {
+    "title": "European Defence Technology",
+    "body": "Software capability for NATO and European partners. Built in Europe, under European law, at commercial speed.",
+    "metric": "Orcrist"
+  },
+  {
+    "title": "Public Safety",
+    "body": "Analysis tools for police and security authorities where traceability matters as much as accuracy.",
+    "metric": "Civitas"
+  },
+  {
+    "title": "Company Building",
+    "body": "From nothing to a product the market wants, then to scale. Founding teams, positioning, growth engines, operating cadence.",
+    "metric": "Innoshare"
+  },
+  {
+    "title": "Investments",
+    "body": "Early cheques and hands-on support for European founders in AI, security and consumer subscription.",
+    "metric": "Angel"
+  },
+  {
+    "title": "Speaking",
+    "body": "Keynotes and panels on sovereign AI, technology in government, and building at European scale.",
+    "metric": "Stage"
+  }
+]

@@ -1,0 +1,34 @@
+[
+  {
+    "type": "Podcast",
+    "title": "All about subscription app onboarding",
+    "outlet": "Subscription League",
+    "date": "2022-11-15",
+    "url": "https://subscriptionleague.com/episode/appic-all-about-subscription-app-onboarding-with-tobias-boerner",
+    "summary": "A working session on subscription onboarding, paywall design and what actually moves conversion in consumer apps."
+  },
+  {
+    "type": "Interview",
+    "title": "Live im Startupland",
+    "outlet": "Startupland",
+    "date": "2024-09-20",
+    "url": "https://www.instagram.com/p/DAX-u68Ku1z/",
+    "summary": "Live conversation on founding Fastic and building consumer products out of Germany."
+  },
+  {
+    "type": "Article",
+    "title": "Fastic raises $5 million to continue US expansion",
+    "outlet": "Tech.eu",
+    "date": "2020-10-07",
+    "url": "https://tech.eu/2020/10/07/fastic-seed-funding/",
+    "summary": "Coverage of Fastic's seed round and the move to make the United States the app's primary market."
+  },
+  {
+    "type": "Article",
+    "title": "German intermittent fasting app Fastic snaps up €4.3 million",
+    "outlet": "EU-Startups",
+    "date": "2020-10-07",
+    "url": "https://www.eu-startups.com/2020/10/german-intermittent-fasting-app-fastic-snaps-up-e4-3-million-to-continue-us-expansion/",
+    "summary": "European coverage of the funding round and Fastic's growth trajectory."
+  }
+]

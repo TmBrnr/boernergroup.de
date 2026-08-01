@@ -1,0 +1,78 @@
+---
+title: Building AI that earns public trust instead of headlines
+description: Every AI company selling into government promises transparency. Almost none of them can tell you what their system did on a specific Tuesday eight months ago. That is the whole problem.
+date: 2026-02-11
+categories: ['Public Safety', 'Artificial Intelligence', 'Trust']
+cover: /media/articles/public-trust-ai.jpg
+coverAlt: A log of records as horizontal rows, with one entry framed and a line tracing it back to its source
+---
+
+There is a specific test I now apply to any AI system built for a public institution, and it has never once failed to be informative.
+
+Pick a date eight months in the past. Ask the vendor to reconstruct exactly what the system output on that date, for one specific case, and why. Which model version, which data, which prompt, which thresholds, which human confirmed it.
+
+Most cannot answer. Not because they are dishonest, but because nobody asked them to build for that question, so they didn't. They built for the demo, where the answer is always available because it is happening right now in front of you.
+
+That question is what public trust actually consists of. Everything else is branding.
+
+## Trust is not a feeling, it is a capability
+
+The public discourse about trustworthy AI is mostly conducted in adjectives. Responsible. Ethical. Human-centric. I have signed my share of documents containing those words and I do not think any of them made a single system safer.
+
+The reason is that adjectives are not testable. If I tell you our platform is "transparent," you have learned nothing about whether an oversight body can audit it. If I tell you that every enrichment step writes an immutable record containing the model identifier, the input hash, the operator, the timestamp and the confidence, you can check whether that is true, and you can check whether the record is still there in three years.
+
+Trust is downstream of capability. A system earns it by being able to answer hard questions about itself, under pressure, from someone who is not on your side. If it cannot do that, no amount of principled language will save it the first time something goes wrong. And something always goes wrong.
+
+> Trust is not what a system claims when it launches. It is what a system can prove when it is challenged.
+
+## The headline problem
+
+Here is the structural trap in this market, and I say this as someone competing in it.
+
+The commercial incentive is to promise capability that outruns what the system can do. Government buyers are not stupid, but they are under pressure to show modernisation, and a vendor promising an AI that "identifies suspects" will always be more exciting than one promising software that "structures evidence so an analyst finds the connection faster."
+
+The second one is what my company builds. It is also the accurate description of what current technology can responsibly do. The first one gets the meeting.
+
+And then the first one gets the headline. Twice. Once when it is announced, once when it fails. The second headline is the expensive one, because it does not just damage the vendor. It sets back every serious team in the category by about two years, and it hands the argument to people who think none of this should be built at all.
+
+We have watched this happen. Predictive policing burned a decade of goodwill because a handful of deployments were sold as prediction when they were, at best, pattern description built on data that encoded the biases of the last twenty years of enforcement. The technology was not the primary failure. The claim was.
+
+So I have a rule that has cost me deals: describe the system as an analyst would describe it after using it for a month, not as a marketer would describe it before. If that description is not enough to win, the deal was going to end badly anyway.
+
+## What we actually build for
+
+Let me be concrete about the design decisions, because this is where the argument stops being comfortable and starts costing engineering time.
+
+**The human is in the record, not just in the loop.** "Human in the loop" has become a phrase that means a confirmation dialog. What matters is whether the specific person who made the decision is identifiable afterwards, and whether the system made it *easy* for them to disagree with it. A system that presents its output as a conclusion produces rubber-stamping. A system that presents its output as evidence with a visible confidence and a path back to the source produces judgement. Same model. Completely different institution.
+
+**Retrieval over recall.** Wherever we can, the system's job is to bring you to the source document, the timestamp in the recording, the row in the export. Not to summarise it for you and discard the original. Summaries are enormously useful and structurally dangerous, because they are the point at which the model's interpretation becomes the institutional record. Every summary in our product is a door, not a destination.
+
+**Uncertainty that is legible to a non-technical user.** A confidence score is a technical artefact that most users will silently reinterpret as a probability of truth. Getting this right is a design problem, not a modelling problem, and we have rebuilt it more than once.
+
+**Deletion that actually works.** The least glamorous item on this list and, in practice, one of the hardest. If a citizen has a right to have data removed, that right has to survive contact with your embeddings, your caches, your logs and your backups. Most AI architectures are built as if data only flows one way. Building the reverse path is real work, and skipping it is a decision to be non-compliant later.
+
+**Traceability that outlives the vendor.** The audit record has to be readable by the institution without our software. If understanding what happened requires our company to still exist and still be cooperative, we have not delivered accountability. We have delivered a dependency.
+
+## Legitimacy is the market
+
+I want to make the commercial case, not only the ethical one, because I think the two are the same case and treating them as opposed is why this sector keeps embarrassing itself.
+
+A tool used by a police force operates on borrowed legitimacy. The institution has it; the software does not. Every deployment either strengthens that legitimacy or spends it. If you spend it, through a wrongful outcome traceable to your system, a data protection finding, or an internal audit that cannot reconstruct what happened, you do not get a bad review. You get removed, and the political cost of your replacement rises for everyone.
+
+Which means auditability is not an obligation imposed on the product from outside. It is the product's ability to survive its own success. The reason we host in Germany, log everything, and refuse to build features that cannot be explained to a data protection officer is not that we are unusually virtuous. It is that we would like to still be deployed in 2031.
+
+## The standard I would like to be held to
+
+I am aware that a founder writing about trust is one of the least trustworthy genres in existence. So let me end with something falsifiable rather than something inspiring.
+
+If you are procuring AI for a public institution, mine or anyone else's, ask these five questions in writing:
+
+1. Reconstruct what this system output for one case, eight months ago, and show me the audit record.
+2. Which model version was used, where did it run, and who could have accessed the data in transit?
+3. Show me a case where the system was wrong and how a user noticed.
+4. If a subject requests deletion, walk me through every store that changes.
+5. If your company disappears tomorrow, what can we still read?
+
+None of those questions are about accuracy benchmarks, and that is deliberate. Accuracy is table stakes and easy to demonstrate. The five above are the ones that determine whether the deployment is still standing in five years, and whether the public has any reason to accept it.
+
+Vendors who cannot answer them are not necessarily building bad technology. They are building technology that has not yet been asked to be accountable. In this domain, that is the same as not being finished.

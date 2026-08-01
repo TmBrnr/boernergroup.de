@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Innoshare">
+  <rect width="512" height="512" fill="#08090B"/>
+  <g stroke="#F2F1EE" stroke-width="14" stroke-linecap="round" fill="none" transform="translate(256 216) scale(4.2) translate(-24 -24)">
+    <path d="M21.806 41.866A18 18 0 0 1 7.431 16.967"/>
+    <path d="M9.624 13.167A18 18 0 0 1 38.376 13.167"/>
+    <path d="M40.569 16.967A18 18 0 0 1 26.194 41.866"/>
+  </g>
+  <text x="256" y="396" text-anchor="middle" fill="#F2F1EE" font-family="Inter, system-ui, sans-serif" font-size="40" font-weight="500" letter-spacing="-1.2">Innoshare</text>
+  <text x="256" y="428" text-anchor="middle" fill="#C8BBA6" font-family="ui-monospace, monospace" font-size="15" letter-spacing="5.4">HOLDING</text>
+</svg>

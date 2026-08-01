@@ -1,0 +1,52 @@
+{
+  "eyebrow": "The through-line",
+  "headline": "One argument, told in the order it happened.",
+  "steps": [
+    {
+      "label": "Consumer Tech",
+      "note": "Learning what hundreds of millions of people actually do, not what they say."
+    },
+    {
+      "label": "Growth",
+      "note": "Distribution as a product discipline. Engines, not campaigns."
+    },
+    {
+      "label": "Health Tech",
+      "note": "Changing behaviour is harder than changing software. Retention is the product."
+    },
+    {
+      "label": "Entrepreneurship",
+      "note": "Building the company, not just the product. Teams, cadence, capital."
+    },
+    {
+      "label": "AI",
+      "note": "The first technology where the interface is judgement, not a screen."
+    },
+    {
+      "label": "European Sovereignty",
+      "note": "Who builds the system decides whose rules it follows."
+    },
+    {
+      "label": "Defence",
+      "note": "Decision advantage as the deliverable. Speed under constraint."
+    },
+    {
+      "label": "Public Safety",
+      "note": "Where trust is not a feature. It is the licence to operate."
+    }
+  ],
+  "conclusion": "Nothing here was a pivot. Each step made the next one obvious.",
+  "timeline": {
+    "eyebrow": "Career",
+    "headline": "Fourteen years, one direction.",
+    "intro": "Every step made the next one obvious. Select a milestone to read it."
+  },
+  "faq": {
+    "eyebrow": "Questions",
+    "headline": "In short."
+  },
+  "career": {
+    "eyebrow": "Career",
+    "headline": "Fourteen years, one direction."
+  }
+}

@@ -1,0 +1,73 @@
+---
+title: The next decade belongs to sovereign European AI
+description: Sovereignty is not a values debate. It is a supply chain, a procurement process and a set of engineering decisions, and Europe is currently losing all three.
+date: 2026-06-18
+categories: ['Sovereignty', 'Artificial Intelligence', 'Europe']
+cover: /media/articles/sovereign-european-ai.jpg
+coverAlt: Diagram of a technology stack as six horizontal layers, with one layer lit in blue and shifted out of alignment
+featured: true
+---
+
+I have sat in a lot of rooms in the last two years where the word sovereignty was used as a synonym for "European, please." It usually arrives late in the meeting, after the technical part is over, as a kind of moral flourish. Everyone nods. Nothing changes.
+
+That version of the word is useless. Sovereignty is not a feeling about Europe. It is a boring, concrete, three-part problem: who owns the compute, who controls the model weights, and who signs the contract that lets a public institution use either. Get those three right and you have sovereignty whether or not anyone says the word. Get them wrong and you can put a flag on your landing page. You are still a reseller.
+
+So let me be specific about what I think is actually happening, because I now build in the part of the market where getting this wrong has consequences that are not commercial.
+
+## The dependency is deeper than the debate admits
+
+The comfortable version of the sovereignty story is about hyperscalers. Move the workload to a European cloud, tick the box, go home. It is comfortable because it is a procurement decision, and procurement decisions can be made by people who do not have to understand the stack.
+
+The uncomfortable version goes further down. Accelerators, from a handful of suppliers. Networking silicon. High-bandwidth memory, which is a genuine bottleneck controlled by fewer companies than most ministers realise. Then the layer above: the frontier weights, the fine-tuning ecosystem, the eval harnesses, the tooling everybody's engineers actually use because it is good and it is free and it happens to be American.
+
+I do not say that as a complaint. Those tools are good because the companies that built them are good. But dependency does not care about your intentions. If the layer you build on can be repriced, restricted or deprecated by a decision taken in another jurisdiction, you have handed someone else a veto over your capability. In consumer software that is an annoyance and a migration project. In internal security or defence, it is a strategic condition.
+
+And here is the part that gets skipped: you cannot procure your way out of it retroactively. The architecture decisions that determine whether a system is portable are made in the first six weeks by four engineers who were not thinking about geopolitics. They were thinking about shipping. That is the right instinct. It is also exactly where sovereignty is won or lost.
+
+## What Europe is actually good at
+
+I get tired of the declinist read, because the evidence in front of me does not support it.
+
+Europe has genuinely excellent engineers, and, this matters more than people think, it has them at prices that let you build a serious technical team without a Series B. It has industrial customers with hard, specific, unglamorous problems, which is the best possible training environment for a technology company. It has regulatory literacy: the ability to build something that survives a data protection review is a real skill, and European teams have it in a way that many American teams simply do not, because they never had to.
+
+What Europe does not have is speed in the places where speed is decided. Not engineering speed. Institutional speed. A procurement cycle that takes eighteen months to buy software that will be obsolete in twelve is not a bureaucratic inconvenience; it is an industrial policy that selects against exactly the companies the continent claims to want.
+
+I have watched capable teams die in that gap. Not fail. Die. There is a difference. Failure teaches you something. Dying while waiting for a framework agreement teaches you to go work somewhere else.
+
+> The bottleneck in European technology is almost never the engineering. It is the distance between a good system and a signed contract.
+
+## Sovereignty as an engineering specification
+
+The version of this argument I find useful is the one you can put in a design document. Concretely, for the systems I work on, sovereignty means:
+
+**Substitutability at every layer.** No single model, no single cloud, no single vendor in a position where their withdrawal ends the product. That means an abstraction over inference that is real, tested, and exercised in production. Not a wrapper someone wrote once and never used.
+
+**Weights you can host.** Not necessarily weights you trained. Open-weight models have become good enough that for a very large share of government workloads, the honest answer is that you do not need the frontier. You need something competent, auditable and inside your perimeter. The gap between "best available" and "good enough and mine" has narrowed faster than most procurement frameworks have noticed.
+
+**Data that never leaves the jurisdiction, structurally.** Not by policy. Not by contractual assurance. By architecture, so that the question "could this data have gone somewhere else" has a one-word answer.
+
+**Traceability as a first-class feature.** If a system contributes to a decision that affects a citizen, the path from input to output has to be reconstructable later, by someone who was not there. This is where I think Europe has a genuine, underrated advantage. We were forced to learn this. Now it turns out to be the thing that makes AI deployable in public institutions at all.
+
+None of that is romantic. It is a checklist. But it is a checklist you can hold a supplier to, and "is it European" is not.
+
+## The decade argument
+
+Why do I think the next ten years favour this, when the last five clearly did not?
+
+Because the constraint is moving. For a while the binding constraint on useful AI was raw model capability, and that constraint lived almost entirely in a small number of American labs. If capability is the bottleneck, whoever has the biggest model wins, and Europe was never going to win that race from behind.
+
+That is no longer where the bottleneck is for the work I care about. The bottleneck now is integration: getting a competent model to operate reliably on messy institutional data, inside legal constraints, in workflows that real people already use, with outputs a court or an inspector general will accept. That is not a research problem. It is a systems and domain problem, and domain access is something Europe has and cannot be bought around.
+
+The company that builds the analysis platform a German state police force actually uses is not going to be built by a team that has never sat in that building. That advantage is structural and it is local, and it is the only kind of advantage worth building a decade of industrial strategy on.
+
+## What I would change tomorrow
+
+If I could make three changes, none of them would be a funding programme.
+
+Buy faster. A public procurement route that lets an institution run a paid, scoped pilot with a small company inside ninety days would do more for European technology than most of the capital initiatives announced in the last three years. Not a grant. A purchase order. Grants create applicants; contracts create companies.
+
+Make interoperability a condition of purchase. If the state is buying, the state can require that data and models be portable. Every single time. That one clause, applied consistently, would build a European market rather than a set of European silos.
+
+Stop treating defence and public safety as a moral edge case for engineers. This is the one I feel most strongly about, and it deserves its own argument, so I will make it separately. But the short version: a continent that wants to defend its own values with its own technology cannot also treat the people who build that technology as having made a slightly embarrassing career choice.
+
+Sovereignty will not be won by a summit. It will be won by a few hundred unglamorous engineering decisions, made by teams who understood what they were building and had a customer who could actually buy it. That is a solvable problem. It is just not a rhetorical one.

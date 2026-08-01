@@ -1,0 +1,76 @@
+---
+title: Why defence technology deserves the best engineers
+description: The hardest engineering problems in Europe are now in defence and public safety. The best engineers are mostly working on something else. That is a choice, and it is worth examining.
+date: 2026-04-29
+categories: ['Defence', 'Engineering', 'Europe']
+cover: /media/articles/defence-technology-engineers.jpg
+coverAlt: Overlapping sensor arcs from four positions, with one contact resolved into a single tracked path
+---
+
+I spent most of my career building consumer software. Dating apps. A fasting app. Subscription funnels optimised to the pixel. I am not embarrassed about any of it. Those products reached tens of millions of people, and the discipline they taught me about distribution and retention is the reason I can build anything now.
+
+But I want to describe an experience honestly, because it changed how I think about this.
+
+The first time I sat in a room with people who work in internal security, I understood within about twenty minutes that the software they were using was worse than the software I had shipped to help people skip breakfast. Not slightly worse. A different era. Tools that lost work, that could not search their own contents, that required an analyst to manually re-key information from one system into another because nobody had ever been paid to connect them.
+
+These are people whose output ends up in front of a judge. And the best available product experience in their working day was an export to a spreadsheet.
+
+That gap is the thing I cannot stop thinking about.
+
+## The problems are harder, not easier
+
+There is a lazy assumption in the industry that defence and government work is technically unambitious: integration, compliance, legacy plumbing, work for consultancies rather than engineers.
+
+I understand where that comes from, because a lot of what gets *sold* into that market is exactly that. But it is a statement about the suppliers, not the problems. Look at what the problems actually are:
+
+Fusing data from sensors with different clocks, different reliability profiles and different failure modes, into a single picture that a human can act on in seconds. Running inference in an environment where bandwidth is contested and the network may not exist. Extracting structure from audio recorded in a car, in dialect, over engine noise, where a false positive has consequences and a false negative has different consequences. Building a system where every transformation is reversible and auditable years later, without making it unusable today.
+
+I have worked on hard consumer problems. Sub-second latency at scale is hard. Ranking is hard. Growth at multi-market scale is genuinely hard. But none of it is harder than the above, and the failure mode when I got consumer wrong was a bad quarter.
+
+> If you want to work on distributed systems under adversarial conditions with real physical constraints, there are not many places left doing it at this intensity. Most of them are in defence.
+
+## The moral argument people are actually making
+
+Let me take the ethical objection seriously, because I think a version of it is right and a version of it is lazy, and they get conflated.
+
+The serious version: technology deployed by states against people carries a risk of misuse that ordinary software does not. Surveillance capability, once built, tends to be used more broadly than promised. Autonomy in weapons systems raises questions we have not answered. An engineer who ignores this is not being pragmatic; they are being negligent. That objection deserves respect and it deserves engineering answers: constraints in the architecture, not assurances in the sales deck.
+
+The lazy version: it feels bad, so someone else should do it.
+
+The problem with the lazy version is that it does not reduce the amount of defence technology in the world by one line of code. It only changes who writes it. If the best engineers in Europe decline, the capability still gets built by suppliers with less talent, less scrutiny and worse instincts. Or it gets bought from outside Europe entirely, at which point Europe has outsourced both the capability and the ethics.
+
+I would rather the people with the strongest technical judgement and the strongest opinions about restraint were inside the room. The alternative is not a world without these systems. It is a world where these systems were built by whoever was left.
+
+## What changed materially since 2022
+
+I want to separate the sentiment from the market conditions, because both have moved.
+
+The sentiment moved for the obvious reason. A land war in Europe recalibrated a lot of people's sense of what is theoretical. I meet engineers now who would not have taken a call about this four years ago and who now ask me first.
+
+The market moved for a less obvious reason: software finally became a procurable capability rather than an accessory to hardware. For decades the money in defence was in platforms, the airframe, the hull, the vehicle, and software was a subsystem inside a twenty-year programme. That structure could not accommodate a company that ships weekly. Now there are budget lines, in several European countries, for software as the deliverable. That is the change that makes a startup viable in this space. Not enthusiasm. Line items.
+
+It is still nowhere near enough, and the procurement cycles are still slow enough to kill good companies. But the direction is real, and it is the first time in my working life that a small, excellent software team could plausibly build something in this domain and survive.
+
+## What the work is actually like
+
+Since I am asking people to consider it, I should describe it accurately rather than sell it.
+
+The feedback loop is slower than consumer. You do not A/B test your way to the answer; you sit with users who cannot show you most of their data, and you learn to design from constraint descriptions rather than telemetry. Some engineers find this maddening. Others find it the most interesting design problem they have ever had.
+
+The requirements are stranger and more absolute. "Works 99% of the time" is a sentence that means something completely different here. A degraded mode is not a graceful fallback, it is the primary use case.
+
+The users are extraordinary. This is the part nobody tells you. The analysts and operators I have worked with are precise, deeply expert, and starved of decent tools. Which means when you ship something genuinely good, the reaction is unlike anything in consumer software. Nobody ever thanked me for a paywall.
+
+And the accountability is total, in a way I find clarifying rather than frightening. Every claim your system makes may eventually be examined by someone hostile to it, in public, years later. That is a hell of a specification. It makes you a better engineer.
+
+## The recruiting argument I actually make
+
+I do not lead with patriotism. It does not work on good engineers, and it should not.
+
+What I say is this: the interesting frontier has moved. For fifteen years the most technically ambitious work in Europe was in consumer and infrastructure, and that was a fair assessment. It is no longer where the hardest unsolved problems are. The hardest unsolved problems in European software right now are in systems that have to work under adversarial conditions, with incomplete data, inside legal constraints, where the output is a decision rather than a click.
+
+If that is the kind of problem that makes you want to open a laptop on a Sunday, the honest answer is that consumer will not give you that any more, and neither will most of enterprise SaaS.
+
+And then I say the second thing, which is less about the work: the continent is going to build this capability over the next decade with or without you. The question on the table is not whether it exists. It is whether it was built well, by people who cared about where the limits should be.
+
+I know which version I want to live under.

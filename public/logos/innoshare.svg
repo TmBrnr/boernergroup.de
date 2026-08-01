@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 48" role="img" aria-label="Innoshare GmbH">
+  <title>Innoshare GmbH</title>
+  <g stroke="#EDEEF0" stroke-width="2.9" stroke-linecap="round" fill="none" transform="translate(2 6) scale(0.75)">
+    <path d="M21.806 41.866A18 18 0 0 1 7.431 16.967"/>
+    <path d="M9.624 13.167A18 18 0 0 1 38.376 13.167"/>
+    <path d="M40.569 16.967A18 18 0 0 1 26.194 41.866"/>
+  </g>
+  <text x="44" y="30" fill="#EDEEF0" font-family="Inter, Helvetica, Arial, sans-serif" font-size="23" font-weight="500" letter-spacing="-0.8">Innoshare</text>
+  <text x="45" y="43" fill="#9AA2AC" font-family="ui-monospace, SFMono-Regular, monospace" font-size="7.5" letter-spacing="3.1">GMBH</text>
+</svg>

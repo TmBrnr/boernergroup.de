@@ -1,0 +1,42 @@
+{
+  "updated": "2026-08-01",
+  "supervisoryAuthority": {
+    "name": "Die Sächsische Datenschutz- und Transparenzbeauftragte",
+    "street": "Devrientstraße 5",
+    "postcode": "01067",
+    "city": "Dresden",
+    "url": "https://www.saechsdsb.de"
+  },
+  "processors": [
+    {
+      "name": "Vercel Inc.",
+      "role": "Hostet und liefert die Website aus, verarbeitet technisch notwendige Verbindungsdaten und führt Server-Logdateien.",
+      "note": "440 N Barranca Ave #4133, Covina, CA 91723, USA.",
+      "transfer": "Vercel gibt an, dass sich seine primären Verarbeitungseinrichtungen in den USA befinden. Soweit erforderlich, werden Übermittlungen durch die Standardvertragsklauseln der EU von 2021 abgesichert.",
+      "url": "https://vercel.com/legal/dpa"
+    },
+    {
+      "name": "Plus Five Five, Inc. (Resend)",
+      "role": "Übermittelt E-Mails, die über die Website ausgelöst werden, an den angegebenen Empfänger.",
+      "note": "2261 Market Street #5039, San Francisco, CA 94114, USA.",
+      "transfer": "Resend verweist für Übermittlungen in die USA auf das EU-U.S. Data Privacy Framework und, soweit erforderlich, auf die EU-Standardvertragsklauseln.",
+      "url": "https://resend.com/legal/dpa"
+    }
+  ],
+  "notCollected": [
+    "No analytics, no tracking pixels and no advertising tools are loaded.",
+    "No cookies are set by this website. Nothing is stored on your device beyond the browser cache.",
+    "Fonts are served from our own server, so no request goes to Google Fonts or any other font provider.",
+    "No maps, videos, social plugins or embedded players are loaded from third parties.",
+    "There is no profiling and no automated decision making within the meaning of Art. 22 GDPR."
+  ],
+  "accessibility": {
+    "standard": "WCAG 2.2 level AA",
+    "status": "largely conformant",
+    "knownGaps": [
+      "Tim Börner hat noch kein Porträt. An seiner Stelle stehen seine Initialen auf einer Kachel, für Screenreader ausgeblendet, weil sein Name direkt daneben steht.",
+      "Die animierte Fläche auf der Startseite ist dekorativ und für Hilfstechnik ausgeblendet. Dieselbe Aussage steht dort als normale Überschrift.",
+      "Eine Prüfung durch eine externe Stelle steht aus."
+    ]
+  }
+}

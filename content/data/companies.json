@@ -1,0 +1,299 @@
+[
+  {
+    "slug": "civitas-europe",
+    "name": "Civitas Europe",
+    "role": "Geschäftsführer · Managing Director",
+    "years": "Since March 2026",
+    "status": "current",
+    "category": "Public Safety",
+    "url": "https://civitas-europe.de",
+    "tagline": "Intelligence for operations.",
+    "summary": "Civitas Europe builds Civitas Sentinel, a digital analysis platform for police and security authorities. It structures, connects and evaluates complex data environments so investigators can find what matters, with full traceability and under German and European data protection law.",
+    "logo": "/logos/civitas-europe.svg",
+    "cover": "/media/companies/civitas-europe.jpg",
+    "accent": "38 92 170",
+    "highlights": [
+      "Civitas Sentinel: end-to-end workflow from raw data to operational analysis",
+      "Multimodal ingestion: text, audio, image, video and structured datasets",
+      "Hosting in Germany, role-based access control, full auditability",
+      "GDPR and BDSG compliant by architecture, not by policy"
+    ],
+    "story": [
+      "Security authorities in Europe are not short of data. They are short of time. The bottleneck is not collection, it is the hours between a seized device and an answer a prosecutor can rely on.",
+      "Civitas Sentinel is built for that gap. It takes unstructured evidence, recordings, documents, images, exports, and turns it into a structured, searchable picture of relationships and patterns. Every step is logged, so the analytical path itself can be reviewed in court.",
+      "We made a deliberate choice not to build a general-purpose intelligence platform. Civitas does one thing: structured analysis for the security domain, under European law, hosted in Germany. That constraint is the product."
+    ],
+    "facts": [
+      {
+        "label": "Product",
+        "value": "Civitas Sentinel"
+      },
+      {
+        "label": "Sector",
+        "value": "Law enforcement & internal security"
+      },
+      {
+        "label": "Base",
+        "value": "Dresden, Germany"
+      },
+      {
+        "label": "Compliance",
+        "value": "GDPR / BDSG"
+      }
+    ]
+  },
+  {
+    "slug": "orcrist-technologies",
+    "name": "Orcrist Technologies",
+    "role": "Chief Marketing Officer",
+    "years": "Since July 2026",
+    "status": "current",
+    "category": "Defence",
+    "url": "https://orcrist.org",
+    "tagline": "Turning Europe's data deluge into decision advantage.",
+    "summary": "Orcrist Technologies is a Berlin deep-tech defence software company building AI for real-time situational awareness and sensor fusion. Modular, interoperable systems that give NATO and European partners information advantage in fast-moving, high-threat environments.",
+    "logo": "/logos/orcrist.svg",
+    "cover": "/media/companies/orcrist.jpg",
+    "accent": "168 172 180",
+    "highlights": [
+      "Real-time situational awareness and multi-sensor fusion",
+      "Multimodal data extraction and AI-powered audio intelligence",
+      "Designed for interoperability, speed and modularity",
+      "Dual track: defence software and enterprise data & AI services"
+    ],
+    "story": [
+      "Modern operations generate more sensor data in an hour than a staff can read in a week. The advantage no longer belongs to whoever collects the most; it belongs to whoever understands it first.",
+      "Orcrist builds the layer that compresses that gap: fusion across sensors and modalities, audio intelligence, extraction pipelines that run at the edge of the network rather than in a data centre three borders away.",
+      "The engineering constraint is brutal and clarifying. It has to work degraded, it has to work fast, and it has to plug into systems we did not build. Modularity is not an architectural preference here. It is the requirement."
+    ],
+    "facts": [
+      {
+        "label": "Role",
+        "value": "Chief Marketing Officer"
+      },
+      {
+        "label": "Since",
+        "value": "July 2026"
+      },
+      {
+        "label": "Base",
+        "value": "Berlin, Germany"
+      },
+      {
+        "label": "Focus",
+        "value": "Sensor fusion, audio intelligence"
+      }
+    ]
+  },
+  {
+    "slug": "innoshare",
+    "name": "Innoshare GmbH",
+    "role": "Founder",
+    "years": "Since 2012",
+    "status": "current",
+    "category": "Advisory",
+    "url": null,
+    "tagline": "The advisory behind the companies.",
+    "summary": "Innoshare is the advisory Tobias Börner founded in 2012. Consulting, investments and co-founding. It is the vehicle the rest of the work has been built out of.",
+    "logo": "/logos/innoshare.svg",
+    "cover": "/media/companies/innoshare.jpg",
+    "accent": "154 162 172",
+    "highlights": [
+      "Company building and operating support for founding teams",
+      "Growth and performance marketing advisory across consumer subscription",
+      "Angel investments in AI, security and consumer technology",
+      "Holding structure for participations and advisory mandates"
+    ],
+    "story": [
+      "Innoshare started as the name I put on freelance growth work in 2012. It became the structure everything else grew out of.",
+      "The pattern repeated often enough to be a method: find a product with real retention, build the growth engine that gets it to scale, then either operate it or hand it to a team that can.",
+      "Today Innoshare is where the investments, advisory mandates and new company ideas live before they have a name of their own."
+    ],
+    "facts": [
+      {
+        "label": "Founded",
+        "value": "2012"
+      },
+      {
+        "label": "Seat",
+        "value": "Dresden, Germany"
+      },
+      {
+        "label": "Register",
+        "value": "HRB 33398, Amtsgericht Dresden"
+      },
+      {
+        "label": "Focus",
+        "value": "Advisory, investments, co-founding"
+      }
+    ]
+  },
+  {
+    "slug": "fastic",
+    "name": "Fastic",
+    "role": "CMO & Co-Founder",
+    "years": "Since 2019",
+    "status": "current",
+    "category": "Health Tech",
+    "url": "https://fastic.com",
+    "tagline": "The world's leading intermittent fasting app.",
+    "summary": "Fastic turned intermittent fasting into a habit millions of people could actually keep. Founded in 2019, the app passed 50 million downloads and became the category leader, built on a subscription model and a growth engine we ran ourselves.",
+    "logo": "/logos/fastic.svg",
+    "cover": "/media/companies/fastic.jpg",
+    "accent": "120 190 140",
+    "highlights": [
+      "50M+ downloads worldwide, category leader in intermittent fasting",
+      "€4.3M seed round in 2020 to fund US expansion",
+      "Subscription onboarding and paywall architecture built in-house",
+      "Growth from Germany to the US as the primary market"
+    ],
+    "story": [
+      "Health apps have a structural problem: the people who need them most are the people most likely to quit in week two. Retention is the product.",
+      "We built Fastic around one behaviour, the fasting window, and made it the simplest possible thing to start and the hardest thing to abandon. Everything else in the app existed to protect that loop.",
+      "The growth side was equally unglamorous: relentless creative iteration, onboarding tested to the screen, a paywall we rebuilt more times than I want to admit. That is how the category leader gets built."
+    ],
+    "facts": [
+      {
+        "label": "Founded",
+        "value": "2019, Berlin"
+      },
+      {
+        "label": "Downloads",
+        "value": "50M+"
+      },
+      {
+        "label": "Seed",
+        "value": "€4.3M (2020)"
+      },
+      {
+        "label": "Model",
+        "value": "Consumer subscription"
+      }
+    ]
+  },
+  {
+    "slug": "lovoo",
+    "name": "LOVOO",
+    "role": "CMO & Co-Founder",
+    "years": "2012 to 2022",
+    "status": "past",
+    "category": "Consumer Tech",
+    "url": "https://www.lovoo.com",
+    "tagline": "One of Europe's largest dating platforms.",
+    "summary": "Co-founded LOVOO and ran marketing and growth through nine years of scaling, then sat on the strategic advisory board until 2022. Two exits: The Meet Group in 2017 for about $70M, and The Meet Group into the ProSiebenSat.1 group in 2020 for about $500M.",
+    "logo": "/logos/lovoo.svg",
+    "cover": "/media/companies/lovoo.jpg",
+    "accent": "224 90 130",
+    "highlights": [
+      "Co-founder, then CMO through nine years of scaling",
+      "Two exits: approx. $70M (2017) and approx. $500M (2020)",
+      "Mobile-first user acquisition across European markets",
+      "Strategic advisory board, 2020 to 2022"
+    ],
+    "story": [
+      "LOVOO was my education in scale. Consumer social at that size is an unforgiving classroom: the market tells you within days whether your positioning is right, and it does not care about your reasoning.",
+      "I learned how paid acquisition, product and brand either compound or cancel each other out, and how quickly a growth engine decays if nobody rebuilds it.",
+      "Two exits later, the transferable lesson had nothing to do with dating. It was this: distribution is a product discipline, not a department."
+    ],
+    "facts": [
+      {
+        "label": "Role",
+        "value": "CMO & Co-Founder"
+      },
+      {
+        "label": "Years",
+        "value": "2012 to 2022"
+      },
+      {
+        "label": "Exits",
+        "value": "2017 & 2020"
+      },
+      {
+        "label": "Base",
+        "value": "Dresden / Berlin"
+      }
+    ]
+  },
+  {
+    "slug": "appic",
+    "name": "Appic",
+    "role": "Co-Founder",
+    "years": "2022 to 2023",
+    "status": "past",
+    "category": "Consumer",
+    "url": null,
+    "tagline": "Grow your app, or exit. You decide.",
+    "summary": "An app aggregation venture: acquiring consumer subscription apps, growing them, and giving founders a route to exit without giving up the upside.",
+    "logo": "/logos/appic.svg",
+    "cover": "/media/companies/appic.jpg",
+    "accent": "154 162 172",
+    "highlights": [
+      "Acquisition and growth of consumer subscription apps",
+      "Growth hacking and M&A",
+      "Berlin, 2022 to 2023"
+    ],
+    "story": [
+      "Most small app businesses are worth more inside a portfolio than alone: shared growth infrastructure, shared monetisation know-how, shared negotiating position.",
+      "Appic was built on that thesis: buy well-retaining apps, apply the growth engine, and give founders a decision rather than an ultimatum."
+    ],
+    "facts": [
+      {
+        "label": "Years",
+        "value": "2022 to 2023"
+      },
+      {
+        "label": "Base",
+        "value": "Berlin"
+      },
+      {
+        "label": "Model",
+        "value": "App aggregation"
+      },
+      {
+        "label": "Focus",
+        "value": "Consumer subscription"
+      }
+    ]
+  },
+  {
+    "slug": "admiral-studio",
+    "name": "Admiral Studio",
+    "role": "Co-Founder",
+    "years": "2022 to 2023",
+    "status": "past",
+    "category": "Web3",
+    "url": "https://www.admiral.studio",
+    "tagline": "Performance marketing for Web3.",
+    "summary": "A collective of consultants, marketers and builders working in the Web3 ecosystem, and the team behind WalletAds, a performance marketing layer for on-chain audiences.",
+    "logo": "/logos/admiral-studio.svg",
+    "cover": "/media/companies/admiral-studio.jpg",
+    "accent": "154 162 172",
+    "highlights": [
+      "WalletAds, performance marketing for Web 3.0",
+      "Consulting for brands entering NFT and crypto",
+      "Berlin, 2022 to 2023"
+    ],
+    "story": [
+      "Web3 had capital and attention long before it had a working acquisition stack. Everything that made consumer growth measurable simply did not exist on-chain.",
+      "Admiral Studio was the attempt to bring that discipline across: attribution, creative testing and paid acquisition for wallets rather than devices."
+    ],
+    "facts": [
+      {
+        "label": "Years",
+        "value": "2022 to 2023"
+      },
+      {
+        "label": "Base",
+        "value": "Berlin"
+      },
+      {
+        "label": "Product",
+        "value": "WalletAds"
+      },
+      {
+        "label": "Focus",
+        "value": "Web3 performance marketing"
+      }
+    ]
+  }
+]

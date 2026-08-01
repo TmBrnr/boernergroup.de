@@ -1,0 +1,39 @@
+[
+  {
+    "slug": "tobias-boerner",
+    "name": "Tobias Börner",
+    "role": "Founder",
+    "org": "Innoshare GmbH",
+    "also": "Geschäftsführer, Civitas Europe · CMO, Orcrist Technologies",
+    "bio": "Founded Innoshare in 2012. Co-founded LOVOO and ran its marketing through two exits, co-founded Fastic. Today Geschäftsführer of Civitas Europe and CMO of Orcrist Technologies.",
+    "focus": [
+      "Growth",
+      "Company building",
+      "AI",
+      "Defence"
+    ],
+    "image": "/media/people/tobias-boerner.jpg",
+    "website": null,
+    "linkedin": "https://www.linkedin.com/in/tboerner/",
+    "email": "mail@boernergroup.de",
+    "location": "Dresden, Germany"
+  },
+  {
+    "slug": "tim-boerner",
+    "name": "Tim Börner",
+    "role": "Chief Executive Officer",
+    "org": "Innoshare GmbH",
+    "also": null,
+    "bio": "Runs Innoshare from Singapore, leading advisory mandates, operations and company-building work across Europe and Asia-Pacific.",
+    "focus": [
+      "Operations",
+      "Mandates",
+      "Asia-Pacific"
+    ],
+    "image": null,
+    "website": "https://www.timboerner.com/",
+    "linkedin": "https://www.linkedin.com/in/tmbrnr/",
+    "email": "mail@boernergroup.de",
+    "location": "Singapore"
+  }
+]

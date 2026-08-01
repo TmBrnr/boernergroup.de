@@ -1,0 +1,131 @@
+{
+  "legalName": "Innoshare GmbH",
+  "name": "Innoshare",
+  "founded": 2012,
+  "url": "/innoshare",
+  "logo": "/logos/innoshare.svg",
+  "lockup": "/brand/innoshare-logo.svg",
+  "positioning": "The advisory behind the companies.",
+  "lede": "Founded 2012. Consulting, investments and co-founding. Fourteen years of operating experience applied inside your company rather than delivered as a deck.",
+  "principle": "We take the work we would do as founders and do it with you. Nothing we advise on is something we have not run ourselves.",
+  "services": [
+    {
+      "id": "growth",
+      "title": "Growth & Performance",
+      "body": "Paid acquisition that compounds instead of decaying. Creative systems, channel architecture, measurement you can act on.",
+      "detail": [
+        "Acquisition strategy and channel mix",
+        "Creative testing systems",
+        "Attribution and measurement",
+        "Building the team in house"
+      ]
+    },
+    {
+      "id": "subscription",
+      "title": "Subscription & Retention",
+      "body": "The unglamorous mechanics that decide consumer economics: onboarding, paywall, pricing, and the cliff in week two.",
+      "detail": [
+        "Onboarding and paywall architecture",
+        "Pricing and packaging",
+        "Retention and lifecycle",
+        "LTV modelling"
+      ]
+    },
+    {
+      "id": "building",
+      "title": "Company Building",
+      "body": "From nothing to a product the market wants, then to scale. Founding teams, positioning, operating cadence, the first commercial hires.",
+      "detail": [
+        "Positioning and narrative",
+        "Founding and leadership hires",
+        "Operating cadence and reporting",
+        "Fundraising preparation"
+      ]
+    },
+    {
+      "id": "market-entry",
+      "title": "Market entry for deep tech",
+      "body": "Selling into public institutions, security authorities and regulated industries. The buyer, the cycle and the proof are nothing like consumer.",
+      "detail": [
+        "Public institutions and defence buyers",
+        "Positioning that survives procurement",
+        "Reference customers and pilots",
+        "Partner and channel strategy"
+      ]
+    }
+  ],
+  "record": [
+    {
+      "value": 2012,
+      "suffix": "",
+      "label": "Founded",
+      "count": false
+    },
+    {
+      "value": 50,
+      "suffix": "M+",
+      "label": "Downloads across portfolio companies",
+      "count": true
+    },
+    {
+      "value": 3,
+      "suffix": "",
+      "label": "Exits as an operator",
+      "count": true
+    },
+    {
+      "value": 7,
+      "suffix": "",
+      "label": "Companies founded or led",
+      "count": true
+    }
+  ],
+  "clients": {
+    "eyebrow": "Who we work with",
+    "items": [
+      "Founders raising or scaling a consumer subscription business",
+      "Deep tech companies selling into public institutions for the first time",
+      "Investors who need an operator’s read on a growth thesis",
+      "Leadership teams building a growth function of their own"
+    ]
+  },
+  "engagements": [
+    {
+      "name": "Sprint",
+      "detail": "Two to four weeks. A specific question answered with a plan you can execute."
+    },
+    {
+      "name": "Retained advisory",
+      "detail": "Monthly, ongoing. Standing access, regular working sessions, hands on the numbers."
+    },
+    {
+      "name": "Operating mandate",
+      "detail": "Interim leadership inside the company for a defined period."
+    },
+    {
+      "name": "Investment",
+      "detail": "Capital plus the above, for companies where we want to be on the cap table."
+    }
+  ],
+  "offices": [
+    "Dresden",
+    "Singapore"
+  ],
+  "registry": {
+    "company": "Innoshare GmbH",
+    "street": "Prager Straße 2a",
+    "postcode": "01067",
+    "city": "Dresden",
+    "country": "Deutschland",
+    "register": "HRB 33398",
+    "court": "Amtsgericht Dresden",
+    "vat": "DE327577748",
+    "email": "mail@boernergroup.de",
+    "managingDirectors": [
+      "Tobias Börner",
+      "Tim Börner"
+    ],
+    "phone": "",
+    "website": "https://boernergroup.de"
+  }
+}

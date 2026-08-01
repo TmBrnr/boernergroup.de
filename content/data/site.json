@@ -1,0 +1,150 @@
+{
+  "name": "Tobias Börner",
+  "nameAscii": "Tobias Boerner",
+  "shortName": "Börner",
+  "role": "Technology entrepreneur, CEO and investor",
+  "holding": "Innoshare GmbH",
+  "domain": "boernergroup.de",
+  "url": "https://boernergroup.de",
+  "locale": "en",
+  "location": {
+    "city": "Dresden",
+    "country": "Germany",
+    "countryCode": "DE"
+  },
+  "hero": {
+    "headline": "Building European Technology Companies.",
+    "pillars": [
+      "AI",
+      "Defence",
+      "Public Safety",
+      "Growth"
+    ],
+    "roles": [
+      "Geschäftsführer, Civitas Europe",
+      "CMO, Orcrist Technologies",
+      "CMO & Co-Founder, Fastic",
+      "Founder, Innoshare"
+    ],
+    "primaryCta": {
+      "label": "Advisory",
+      "href": "/innoshare"
+    },
+    "secondaryCta": {
+      "label": "Companies",
+      "href": "/companies"
+    },
+    "rolesLine": "Civitas Europe · Orcrist Technologies · Fastic · Innoshare",
+    "claim": [
+      "BUILDING",
+      "EUROPEAN",
+      "TECHNOLOGY"
+    ]
+  },
+  "intro": "I build technology companies in Europe. Today that means AI for defence and public safety.",
+  "email": "mail@boernergroup.de",
+  "social": [
+    {
+      "label": "Tobias Börner",
+      "href": "https://www.linkedin.com/in/tboerner/",
+      "handle": "in/tboerner"
+    },
+    {
+      "label": "Tim Börner",
+      "href": "https://www.linkedin.com/in/tmbrnr/",
+      "handle": "in/tmbrnr"
+    }
+  ],
+  "sameAs": [
+    "https://www.linkedin.com/in/tboerner/",
+    "https://civitas-europe.de",
+    "https://orcrist.org",
+    "https://fastic.com"
+  ],
+  "nav": [
+    {
+      "label": "About",
+      "href": "/about"
+    },
+    {
+      "label": "Innoshare",
+      "href": "/innoshare"
+    },
+    {
+      "label": "Companies",
+      "href": "/companies"
+    },
+    {
+      "label": "Newsroom",
+      "href": "/newsroom"
+    }
+  ],
+  "keywords": [
+    "Tobias Börner",
+    "European technology",
+    "defence technology",
+    "public safety AI",
+    "sovereign AI",
+    "Civitas Europe",
+    "Orcrist Technologies",
+    "Innoshare",
+    "Fastic",
+    "LOVOO",
+    "technology keynote speaker Europe"
+  ],
+  "coda": {
+    "eyebrow": "Contact",
+    "line": "Dresden and Singapore.",
+    "links": [
+      {
+        "label": "Innoshare, the advisory",
+        "href": "/innoshare"
+      },
+      {
+        "label": "Companies",
+        "href": "/companies"
+      },
+      {
+        "label": "Writing",
+        "href": "/newsroom"
+      },
+      {
+        "label": "Full background",
+        "href": "/about"
+      }
+    ]
+  },
+  "now": {
+    "eyebrow": "Now",
+    "items": [
+      {
+        "role": "Geschäftsführer",
+        "org": "Civitas Europe",
+        "note": "Intelligence for operations.",
+        "href": "/companies/civitas-europe"
+      },
+      {
+        "role": "Chief Marketing Officer",
+        "org": "Orcrist Technologies",
+        "note": "Defence software, Berlin.",
+        "href": "/companies/orcrist-technologies"
+      },
+      {
+        "role": "CMO & Co-Founder",
+        "org": "Fastic",
+        "note": "50 million downloads.",
+        "href": "/companies/fastic"
+      },
+      {
+        "role": "Founder",
+        "org": "Innoshare",
+        "note": "Advisory, investments, co-founding.",
+        "href": "/innoshare"
+      }
+    ]
+  },
+  "before": {
+    "eyebrow": "Before",
+    "note": "Consumer and Web3, 2012 to 2023."
+  }
+}
