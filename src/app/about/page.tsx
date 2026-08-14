@@ -36,33 +36,51 @@ export default function AboutPage() {
 
       {/* ---- The through-line ---- */}
       <section aria-labelledby="chain-heading" className="py-20 sm:py-28">
-        <div className="shell">
-          <h2 id="chain-heading" className="eyebrow">
-            {STORY.eyebrow}
-          </h2>
-          <ol className="mt-10">
-            {STORY.steps.map((step, index) => (
-              <Reveal
-                key={step.label}
-                delay={index * 0.04}
-                as="li"
-                className="group grid grid-cols-[3.5rem_1fr] items-start gap-x-6 gap-y-2 border-t border-line/[0.07] py-7 transition-colors duration-500 hover:border-line/20 sm:grid-cols-[4.5rem_minmax(0,20ch)_1fr] sm:gap-x-10"
-              >
-                <span className="pt-1 font-mono text-[0.6875rem] tracking-[0.16em] text-faint">
-                  {String(index + 1).padStart(2, '0')}
-                </span>
-                <h3 className="text-d4 font-medium tracking-[-0.022em] text-bone">{step.label}</h3>
-                <p className="col-start-2 max-w-[46ch] text-[0.9375rem] leading-relaxed text-bone/50 transition-colors duration-500 group-hover:text-bone/72 sm:col-start-3 sm:pt-1.5">
-                  {step.note}
-                </p>
-              </Reveal>
-            ))}
-          </ol>
-          <Reveal delay={0.1}>
-            <p className="mt-12 border-t border-line/[0.07] pt-10 text-d3 font-medium leading-[1.04] tracking-[-0.03em] text-bone/85 sm:max-w-[24ch]">
-              {STORY.conclusion}
-            </p>
+        <div className="shell lg:grid lg:grid-cols-[minmax(14rem,0.55fr)_minmax(0,1.45fr)] lg:gap-20 xl:gap-28">
+          <Reveal className="mb-12 lg:mb-0">
+            <figure className="overflow-hidden rounded-sm border border-line/[0.1] bg-ink-raised lg:sticky lg:top-28">
+              <Image
+                src="/media/portrait.jpg"
+                alt="Tobias Börner"
+                width={1200}
+                height={1500}
+                sizes="(min-width: 1280px) 24rem, (min-width: 1024px) 18rem, 100vw"
+                className="aspect-[4/5] w-full object-cover object-top"
+                priority
+              />
+            </figure>
           </Reveal>
+
+          <div>
+            <h2 id="chain-heading" className="eyebrow">
+              {STORY.eyebrow}
+            </h2>
+            <ol className="mt-10">
+              {STORY.steps.map((step, index) => (
+                <Reveal
+                  key={step.label}
+                  delay={index * 0.04}
+                  as="li"
+                  className="group grid grid-cols-[3.5rem_minmax(0,1fr)] items-start gap-x-6 gap-y-2 border-t border-line/[0.07] py-7 transition-colors duration-500 hover:border-line/20 sm:grid-cols-[4.5rem_minmax(0,1fr)] sm:gap-x-10"
+                >
+                  <span className="pt-1 font-mono text-[0.6875rem] tracking-[0.16em] text-faint">
+                    {String(index + 1).padStart(2, '0')}
+                  </span>
+                  <h3 className="min-w-0 break-words text-d4 font-medium tracking-[-0.022em] text-bone">
+                    {step.label}
+                  </h3>
+                  <p className="col-start-2 min-w-0 max-w-[46ch] text-[0.9375rem] leading-relaxed text-bone/50 transition-colors duration-500 group-hover:text-bone/72 sm:pt-1.5">
+                    {step.note}
+                  </p>
+                </Reveal>
+              ))}
+            </ol>
+            <Reveal delay={0.1}>
+              <p className="mt-12 border-t border-line/[0.07] pt-10 text-d3 font-medium leading-[1.04] tracking-[-0.03em] text-bone/85 sm:max-w-[24ch]">
+                {STORY.conclusion}
+              </p>
+            </Reveal>
+          </div>
         </div>
       </section>
 
