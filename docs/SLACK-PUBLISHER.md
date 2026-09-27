@@ -7,12 +7,13 @@ leaving Slack. There is no pull-request review or separate GitHub approval step.
 
 For a normal article brief, the bot:
 
-1. researches current sources with OpenAI web search;
-2. drafts structured MDX in the site's existing editorial style;
-3. validates the generated MDX;
-4. prepares an attached cover image or creates a branded cover automatically;
-5. commits the article and cover atomically to the production branch; and
-6. replies with the article URL and the recovery-history commit.
+1. places the request on a durable Vercel Queue;
+2. researches current sources with OpenAI web search in background mode;
+3. drafts structured MDX in the site's existing editorial style;
+4. validates the generated MDX;
+5. prepares an attached cover image or creates a branded cover automatically;
+6. commits the article and cover atomically to the production branch; and
+7. replies in the original Slack thread with the article URL and recovery-history commit.
 
 A Git-connected host such as Vercel then deploys the new commit. There is no
 Publish button and no GitHub check to click through.
@@ -44,11 +45,12 @@ Use Node.js 22 or newer. Provision a serverless-compatible Redis database and
 set the variables in `.env.example`. Connect the host to the repository's
 production branch so each bot commit triggers a deployment.
 
-The current Vercel Hobby project limits functions to 60 seconds. A complete
-web-research and max-reasoning article run can take several minutes, so upgrade
-the project to Pro and restore the webhook's `maxDuration` to `300`, or move the
-article job into a queued background worker before enabling the Slack event
-subscription in production.
+The Slack webhook only validates and queues the command, so it returns quickly.
+The queue consumer splits publishing into short, retryable stages. Long OpenAI
+work runs through the background Responses API and is polled by delayed queue
+messages, keeping every Vercel Function within the Hobby plan's 60-second limit.
+Vercel provisions Queue authentication automatically for deployments; no queue
+API token is stored in Production.
 
 ### Local environment file
 
@@ -61,7 +63,7 @@ Only these values are needed for a real local generation test:
 ```text
 OPENAI_API_KEY=
 OPENAI_MODEL=gpt-6-luna
-OPENAI_REASONING_EFFORT=max
+OPENAI_REASONING_EFFORT=high
 ```
 
 Run the offline pipeline smoke test first:
@@ -86,6 +88,11 @@ Vercel project's Production environment through the dashboard or with
 secrets, Redis URLs, and GitHub tokens. Do not upload `VERCEL_OIDC_TOKEN`; Vercel
 manages it automatically. Note that `vercel env pull .env.local` replaces the
 local file, so back it up before pulling.
+
+The complete Slack flow uses Vercel Queues. To run that flow locally with
+`vercel dev`, link the project and pull its development environment so the
+Queues SDK receives a short-lived local credential. The standalone
+`npm run test:blog` command does not need queue credentials.
 
 Access is deliberately explicit:
 
@@ -128,7 +135,9 @@ Create a project in the [OpenAI API platform](https://platform.openai.com/) and
 store its project API key as `OPENAI_API_KEY`. Configure project spend limits
 and keep `OPENAI_MODEL` configurable. The integration uses the Responses API,
 structured outputs, image understanding for attached covers, and the hosted web
-search tool. OpenAI responses are sent with `store: false`.
+search tool. Foreground local-test responses and queued background responses
+are sent with `store: false`. Background results remain available temporarily
+while the queue polls them and are not retained as long-lived stored responses.
 
 ## Slack commands
 
@@ -166,6 +175,9 @@ Show the short command reference:
 
 - Slack request signatures are verified.
 - Redis provides webhook deduplication and per-thread locking.
+- Vercel Queues provides durable delivery, delayed polling, and bounded retries.
+- Queue sends and GitHub commits use idempotency markers so Slack retries do not
+  intentionally create duplicate model runs or duplicate repository changes.
 - Only explicitly listed publisher IDs can change content.
 - Web content is treated as untrusted source material, not instructions.
 - Generated MDX rejects imports, scripts, iframes, event handlers, JavaScript

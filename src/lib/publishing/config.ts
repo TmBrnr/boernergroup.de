@@ -17,7 +17,7 @@ const csv = (name: string): Set<string> =>
 export type OpenAiReasoningEffort = 'none' | 'low' | 'medium' | 'high' | 'xhigh' | 'max';
 
 const reasoningEffort = (value: string | undefined): OpenAiReasoningEffort => {
-  const candidate = value?.trim() || 'max';
+  const candidate = value?.trim() || 'high';
   const allowed: OpenAiReasoningEffort[] = ['none', 'low', 'medium', 'high', 'xhigh', 'max'];
 
   if (!allowed.includes(candidate as OpenAiReasoningEffort)) {

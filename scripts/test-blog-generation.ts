@@ -104,7 +104,7 @@ async function main(): Promise<void> {
     );
   }
 
-  const openAiReasoningEffort = process.env.OPENAI_REASONING_EFFORT?.trim() || 'max';
+  const openAiReasoningEffort = process.env.OPENAI_REASONING_EFFORT?.trim() || 'high';
   const allowedReasoningEfforts: OpenAiReasoningEffort[] = [
     'none',
     'low',

@@ -10,6 +10,7 @@ type GitCommit = { sha: string; tree: { sha: string }; html_url: string };
 type GitBlob = { sha: string };
 type GitTree = { sha: string };
 type ContentFile = { type: 'file'; content: string; encoding: 'base64'; sha: string };
+type GitHubListCommit = { html_url: string; commit: { message: string } };
 
 class GitHubRequestError extends Error {
   constructor(
@@ -75,6 +76,19 @@ async function getContentFile(
   }
 }
 
+async function findOperationCommit(
+  config: PublishingConfig,
+  operationId: string | undefined,
+): Promise<GitHubListCommit | null> {
+  if (!operationId) return null;
+  const commits = await github<GitHubListCommit[]>(
+    config,
+    `${repoPath(config)}/commits?sha=${encodeURIComponent(config.githubDefaultBranch)}&per_page=30`,
+  );
+  const marker = `Publisher operation: ${operationId}`;
+  return commits.find((commit) => commit.commit.message.includes(marker)) ?? null;
+}
+
 async function createBlob(
   config: PublishingConfig,
   content: Buffer | string,
@@ -133,6 +147,7 @@ export async function publishArticle(input: {
   article: PreparedArticle;
   cover: PreparedCover;
   requestedBy: string;
+  operationId?: string;
   config: PublishingConfig;
 }): Promise<{ articleUrl: string; commitUrl: string }> {
   const { article, config } = input;
@@ -141,6 +156,13 @@ export async function publishArticle(input: {
     getContentFile(config, article.coverPath),
   ]);
   if (existingArticle || existingCover) {
+    const previous = await findOperationCommit(config, input.operationId);
+    if (previous) {
+      return {
+        articleUrl: `${config.siteUrl}/newsroom/${article.slug}`,
+        commitUrl: previous.html_url,
+      };
+    }
     throw new Error(
       `An article or cover with the slug “${article.slug}” already exists. Use a different title or delete the existing article first.`,
     );
@@ -152,7 +174,11 @@ export async function publishArticle(input: {
   ]);
   const commit = await commitChanges({
     config,
-    message: `Publish article: ${article.slug}\n\nRequested from Slack by ${input.requestedBy}`,
+    message: [
+      `Publish article: ${article.slug}`,
+      `Requested from Slack by ${input.requestedBy}`,
+      input.operationId ? `Publisher operation: ${input.operationId}` : '',
+    ].filter(Boolean).join('\n\n'),
     changes: [
       { path: article.articlePath, mode: '100644', type: 'blob', sha: articleBlob },
       { path: article.coverPath, mode: '100644', type: 'blob', sha: coverBlob },
@@ -168,11 +194,18 @@ export async function publishArticle(input: {
 export async function deleteArticle(input: {
   slug: string;
   requestedBy: string;
+  operationId?: string;
   config: PublishingConfig;
 }): Promise<{ newsroomUrl: string; commitUrl: string }> {
   const articlePath = `content/articles/${input.slug}.mdx`;
   const articleFile = await getContentFile(input.config, articlePath);
-  if (!articleFile) throw new Error(`No published article with the slug “${input.slug}” was found.`);
+  if (!articleFile) {
+    const previous = await findOperationCommit(input.config, input.operationId);
+    if (previous) {
+      return { newsroomUrl: `${input.config.siteUrl}/newsroom`, commitUrl: previous.html_url };
+    }
+    throw new Error(`No published article with the slug “${input.slug}” was found.`);
+  }
 
   const raw = Buffer.from(articleFile.content.replace(/\s/g, ''), 'base64').toString('utf8');
   const { data } = parseFrontmatter<Record<string, unknown>>(raw);
@@ -188,7 +221,11 @@ export async function deleteArticle(input: {
 
   const commit = await commitChanges({
     config: input.config,
-    message: `Delete article: ${input.slug}\n\nRequested from Slack by ${input.requestedBy}`,
+    message: [
+      `Delete article: ${input.slug}`,
+      `Requested from Slack by ${input.requestedBy}`,
+      input.operationId ? `Publisher operation: ${input.operationId}` : '',
+    ].filter(Boolean).join('\n\n'),
     changes,
   });
 
