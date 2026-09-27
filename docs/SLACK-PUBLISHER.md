@@ -45,6 +45,10 @@ Use Node.js 22 or newer. Provision a serverless-compatible Redis database and
 set the variables in `.env.example`. Connect the host to the repository's
 production branch so each bot commit triggers a deployment.
 
+Vercel Marketplace Redis integrations sometimes expose a project-prefixed
+variable such as `MY_STORE_REDIS_URL`. The publisher accepts either that form or
+the conventional `REDIS_URL` name.
+
 The Slack webhook only validates and queues the command, so it returns quickly.
 The queue consumer splits publishing into short, retryable stages. Long OpenAI
 work runs through the background Responses API and is polled by delayed queue

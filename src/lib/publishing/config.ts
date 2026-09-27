@@ -14,6 +14,18 @@ const csv = (name: string): Set<string> =>
       .filter(Boolean),
   );
 
+const redisUrl = (): string => {
+  const direct = process.env.REDIS_URL?.trim();
+  if (direct) return direct;
+
+  const marketplace = Object.entries(process.env).find(
+    ([name, value]) => name.endsWith('_REDIS_URL') && value?.trim(),
+  )?.[1]?.trim();
+  if (marketplace) return marketplace;
+
+  throw new Error('Missing required environment variable: REDIS_URL');
+};
+
 export type OpenAiReasoningEffort = 'none' | 'low' | 'medium' | 'high' | 'xhigh' | 'max';
 
 const reasoningEffort = (value: string | undefined): OpenAiReasoningEffort => {
@@ -63,7 +75,7 @@ export function getPublishingConfig(): PublishingConfig {
     openAiReasoningEffort: reasoningEffort(process.env.OPENAI_REASONING_EFFORT),
     slackBotToken: required('SLACK_BOT_TOKEN'),
     slackSigningSecret: required('SLACK_SIGNING_SECRET'),
-    redisUrl: required('REDIS_URL'),
+    redisUrl: redisUrl(),
     githubToken: required('GITHUB_TOKEN'),
     githubOwner,
     githubRepo,
