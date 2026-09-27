@@ -44,6 +44,12 @@ Use Node.js 22 or newer. Provision a serverless-compatible Redis database and
 set the variables in `.env.example`. Connect the host to the repository's
 production branch so each bot commit triggers a deployment.
 
+The current Vercel Hobby project limits functions to 60 seconds. A complete
+web-research and max-reasoning article run can take several minutes, so upgrade
+the project to Pro and restore the webhook's `maxDuration` to `300`, or move the
+article job into a queued background worker before enabling the Slack event
+subscription in production.
+
 ### Local environment file
 
 The ignored `.env.local` file in the project root now contains every setting
