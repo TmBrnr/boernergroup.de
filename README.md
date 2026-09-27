@@ -122,3 +122,15 @@ analytics script is included, so add one deliberately if you want it.
 
 See `docs/CONTENT.md`. Short version: nothing in `src/` needs to change to
 add a company, an article, a talk, a press item or a timeline milestone.
+
+## Slack article publisher
+
+The optional Slack integration researches article briefs with OpenAI web search,
+publishes them directly for authorised users, and supports reversible deletion
+from Slack. See [docs/SLACK-PUBLISHER.md](docs/SLACK-PUBLISHER.md) for architecture,
+account ownership, permissions, deployment, and usage.
+
+For a local generation-only smoke test that never contacts Slack or GitHub, run
+`npm run test:blog -- --fixture`. After adding `OPENAI_API_KEY` to the ignored
+`.env.local`, pass an article brief instead of `--fixture` for a real researched
+preview.

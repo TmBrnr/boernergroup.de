@@ -1,9 +1,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-import matter from 'gray-matter';
 import readingTime from 'reading-time';
 
+import { parseFrontmatter } from './frontmatter';
 import { slugify } from './utils';
 import type { Article, ArticleFrontmatter } from './types';
 
@@ -24,8 +24,7 @@ function read(): Article[] {
     .filter((file) => file.endsWith('.mdx'))
     .map((file) => {
       const raw = fs.readFileSync(path.join(ARTICLES_DIR, file), 'utf8');
-      const { data, content } = matter(raw);
-      const fm = data as ArticleFrontmatter;
+      const { data: fm, content } = parseFrontmatter<ArticleFrontmatter>(raw);
       const stats = readingTime(content);
 
       return {

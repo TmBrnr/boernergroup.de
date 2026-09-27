@@ -13,6 +13,7 @@ const ROOT = path.join(import.meta.dirname, '..');
 const API = path.join(ROOT, 'src', 'app', 'api');
 const PARKED = path.join(ROOT, '.api.parked');
 const OUT = path.join(ROOT, 'out');
+const NEXT_CACHE = path.join(ROOT, '.next');
 
 const MOVED = [
   ['/imprint', '/impressum/'],
@@ -35,6 +36,9 @@ process.on('SIGINT', () => {
 
 try {
   fs.rmSync(OUT, { recursive: true, force: true });
+  // Avoid stale generated route validators referencing API files while they
+  // are parked for the static-only build.
+  fs.rmSync(NEXT_CACHE, { recursive: true, force: true });
   if (fs.existsSync(API)) fs.renameSync(API, PARKED);
 
   execSync('next build', {
