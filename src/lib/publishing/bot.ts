@@ -71,8 +71,8 @@ export function getPublishingBot(): Chat {
 
   bot.onNewMention(async (thread, message) => {
     const activeConfig = getPublishingConfig();
-    if (!canManageArticles(activeConfig, thread.channelId, message.author.userId)) {
-      await thread.post('You are not authorised to publish or delete articles in this channel.');
+    if (!canManageArticles(activeConfig, message.author.userId)) {
+      await thread.post('You are not authorised to publish or delete articles.');
       return;
     }
 

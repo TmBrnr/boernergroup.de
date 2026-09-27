@@ -54,7 +54,6 @@ export type PublishingConfig = {
   githubDefaultBranch: string;
   siteUrl: string;
   botName: string;
-  allowedChannelIds: Set<string>;
   publisherUserIds: Set<string>;
 };
 
@@ -82,25 +81,15 @@ export function getPublishingConfig(): PublishingConfig {
     githubDefaultBranch: process.env.GITHUB_DEFAULT_BRANCH?.trim() || 'main',
     siteUrl: (process.env.NEXT_PUBLIC_SITE_URL?.trim() || 'https://boernergroup.de').replace(/\/$/, ''),
     botName: process.env.PUBLISHER_BOT_NAME?.trim() || 'Boerner Publisher',
-    allowedChannelIds: csv('SLACK_ALLOWED_CHANNEL_IDS'),
     publisherUserIds: csv('SLACK_PUBLISHER_USER_IDS'),
   };
 
   return cached;
 }
 
-function isAllowed(id: string, allowlist: Set<string>): boolean {
-  return allowlist.size === 0 || allowlist.has(id);
-}
-
 export function canManageArticles(
   config: PublishingConfig,
-  channelId: string,
   userId: string,
 ): boolean {
-  return (
-    isAllowed(channelId.replace(/^slack:/, ''), config.allowedChannelIds) &&
-    config.publisherUserIds.size > 0 &&
-    config.publisherUserIds.has(userId)
-  );
+  return config.publisherUserIds.size > 0 && config.publisherUserIds.has(userId);
 }

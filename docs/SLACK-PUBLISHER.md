@@ -98,14 +98,10 @@ The complete Slack flow uses Vercel Queues. To run that flow locally with
 Queues SDK receives a short-lived local credential. The standalone
 `npm run test:blog` command does not need queue credentials.
 
-Access is deliberately explicit:
-
-- `SLACK_ALLOWED_CHANNEL_IDS` optionally restricts where commands work.
-- `SLACK_PUBLISHER_USER_IDS` is mandatory and controls both publishing and
-  deletion.
-
-Use Slack IDs such as `U012ABCDEF` and `C012ABCDEF`, separated by commas. An
-empty publisher list denies every content-changing command.
+`SLACK_PUBLISHER_USER_IDS` is mandatory and controls both publishing and
+deletion. Use Slack member IDs such as `U012ABCDEF`, separated by commas. The
+bot may be used in every channel where it is installed, while an empty
+publisher list denies every content-changing command.
 
 ## 2. Create the Slack app
 
