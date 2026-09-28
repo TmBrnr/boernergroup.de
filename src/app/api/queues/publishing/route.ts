@@ -7,9 +7,7 @@ export const maxDuration = 60;
 
 const queueHandler = handleCallback(processPublishingJob, {
   visibilityTimeoutSeconds: 60,
-  retry: (_error, metadata) => ({
-    afterSeconds: Math.min(60, 5 * 2 ** Math.max(0, metadata.deliveryCount - 1)),
-  }),
+  // Propagate failures as HTTP 500 so the platform triggers durable redelivery.
 });
 
 export function POST(request: Request): Promise<Response> {

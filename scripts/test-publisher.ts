@@ -239,3 +239,30 @@ test('live publication requires the exact operation marker, deletion requires 40
     assert.equal(await isChangeLive({ ...review, kind: 'delete' }, SITE), true);
   } finally { globalThis.fetch = realFetch; }
 });
+
+test('confirmation releases the review lock before an immediately delivered worker starts', async () => {
+  const { store, review } = await fixtureReview();
+  const reply = await decideStoredReview(store, { reviewId: ID, threadId: review.threadId, userId: 'U123', action: 'confirm' }, () => true, async () => {
+    await store.locked(ID, async () => {
+      const approved = await store.get(ID);
+      assert.equal(approved?.status, 'approved');
+      assert.equal(approved?.dispatched, true);
+      await store.save({ ...approved!, status: 'committed', commitUrl: 'https://github.com/example/repo/commit/123' });
+    });
+  });
+  assert.ok(reply.startsWith('Confirmed'));
+  assert.equal((await store.get(ID))?.status, 'committed');
+  assert.equal((await store.get(ID))?.commitUrl, 'https://github.com/example/repo/commit/123');
+});
+
+test('lost queue acknowledgement cannot overwrite successful worker progress', async () => {
+  const { store, review } = await fixtureReview();
+  await decideStoredReview(store, { reviewId: ID, threadId: review.threadId, userId: 'U123', action: 'confirm' }, () => true, async () => {
+    await store.locked(ID, async () => {
+      await store.save({ ...(await store.get(ID))!, status: 'completed', commitUrl: 'https://github.com/example/repo/commit/123' });
+    });
+    throw new Error('Queue acknowledgement lost after processing');
+  });
+  assert.equal((await store.get(ID))?.status, 'completed');
+  assert.equal((await store.get(ID))?.dispatched, true);
+});

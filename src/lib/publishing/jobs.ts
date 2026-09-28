@@ -15,7 +15,7 @@ import { friendlyError } from './errors';
 import { deleteArticle, publishArticle, readPublishedArticle } from './github';
 import { pollDraftArticle, pollResearchTopic, startDraftArticle, startResearchTopic } from './openai';
 import { postReviewPreview } from './review-card';
-import { getReviewStore, restoreCover, storedCover, type Review } from './reviews';
+import { getReviewStore, restoreCover, storedCover, ReviewBusyError, type Review } from './reviews';
 
 import { enqueueJob } from './queue';
 export { PUBLISHING_QUEUE_TOPIC } from './queue';
@@ -201,6 +201,7 @@ export async function processPublishingJob(payload: unknown, metadata: MessageMe
     console.error('Discarding invalid or obsolete publishing queue payload', parsed.error.flatten());
     return;
   }
+  console.info('Publishing queue stage started', { jobId: parsed.data.context.jobId, stage: parsed.data.stage, deliveryCount: metadata.deliveryCount });
   try {
     const agent = agentJobSchema.safeParse(parsed.data);
     const revision = revisionJobSchema.safeParse(parsed.data);
@@ -209,9 +210,10 @@ export async function processPublishingJob(payload: unknown, metadata: MessageMe
       if (!canManageArticles(getPublishingConfig(), revision.data.context.requestedBy)) throw new Error('Not authorised.');
       await processRevision(revision.data);
     } else await processJob(publishingJobSchema.parse(parsed.data));
+    console.info('Publishing queue stage finished', { jobId: parsed.data.context.jobId, stage: parsed.data.stage });
   } catch (error) {
     console.error('Publishing queue job failed', { jobId: parsed.data.context.jobId, stage: parsed.data.stage, deliveryCount: metadata.deliveryCount, error });
-    if (metadata.deliveryCount < 3) throw error;
+    if (error instanceof ReviewBusyError || metadata.deliveryCount < 3) throw error;
     const revision = revisionJobSchema.safeParse(parsed.data);
     if (revision.success) await failRevision(revision.data);
     if (agentJobSchema.safeParse(parsed.data).success) await releaseAgentTurn(parsed.data.context);

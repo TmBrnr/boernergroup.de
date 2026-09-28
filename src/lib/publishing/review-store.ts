@@ -30,6 +30,10 @@ export type Review = {
   failure?: string;
 };
 
+export class ReviewBusyError extends Error {
+  constructor() { super('This review is already being processed. Please try again shortly.'); this.name = 'ReviewBusyError'; }
+}
+
 function tokenKey(token: string): string {
   return `preview:${createHash('sha256').update(token).digest('hex')}`;
 }
@@ -55,7 +59,7 @@ export function reviewStore(state: StateAdapter) {
     },
     async locked<T>(id: string, operation: () => Promise<T>): Promise<T> {
       const lock = await state.acquireLock(`review-lock:${id}`, 120_000);
-      if (!lock) throw new Error('This review is already being processed. Please try again shortly.');
+      if (!lock) throw new ReviewBusyError();
       try { return await operation(); } finally { await state.releaseLock(lock); }
     },
   };
@@ -83,30 +87,44 @@ export async function decideStoredReview(
   enqueue: (review: Review) => Promise<void>,
 ): Promise<string> {
   if (!isAuthorised(input.userId)) return 'You are not authorised to manage articles.';
-  return store.locked(input.reviewId, async () => {
-    const review = await store.get(input.reviewId);
-    if (!review || review.threadId !== input.threadId) return 'This review does not exist in this thread. Use its original preview message.';
-    if (review.status === 'approved' && !review.dispatched && input.action === 'confirm') {
-      await enqueue(review);
-      await store.save({ ...review, dispatched: true });
-      return 'Confirmation dispatch retried. The approved change will be applied only once.';
-    }
-    if (review.status !== 'pending') return `This review is already ${review.status}. No additional change was queued.`;
-    if (review.expiresAt <= Date.now()) return 'This preview expired. Request a new preview before confirming.';
-    if (input.action === 'cancel') {
-      await store.save({ ...review, status: 'cancelled' });
-      return 'Cancelled. No website change will be made.';
-    }
-    const approved: Review = { ...review, status: 'approved', approvedBy: input.userId };
-    await store.save(approved);
+  // Serialize user decisions separately from workers. A worker may start as soon
+  // as enqueue() runs, so the review lock must already be released at that point.
+  return store.locked(`${input.reviewId}:decision`, async () => {
+    let dispatch: Review | undefined;
+    const reply = await store.locked(input.reviewId, async () => {
+      const review = await store.get(input.reviewId);
+      if (!review || review.threadId !== input.threadId) return 'This review does not exist in this thread. Use its original preview message.';
+      if (review.status === 'approved' && !review.dispatched && input.action === 'confirm') {
+        dispatch = { ...review, dispatched: true };
+        await store.save(dispatch);
+        return 'Confirmation dispatch retried. The approved change will be applied only once.';
+      }
+      if (review.status !== 'pending') return `This review is already ${review.status}. No additional change was queued.`;
+      if (review.expiresAt <= Date.now()) return 'This preview expired. Request a new preview before confirming.';
+      if (input.action === 'cancel') {
+        await store.save({ ...review, status: 'cancelled' });
+        return 'Cancelled. No website change will be made.';
+      }
+      dispatch = { ...review, status: 'approved', approvedBy: input.userId, dispatched: true };
+      await store.save(dispatch);
+      return `Confirmed ${review.kind} of “${review.title}”. I will apply the change and check the live website before reporting completion.`;
+    });
+    if (!dispatch) return reply;
     try {
-      await enqueue(approved);
-      await store.save({ ...approved, dispatched: true });
+      await enqueue(dispatch);
     } catch {
-      // Delivery may have succeeded even if its acknowledgement was lost.
-      // Keep approval intact; retrying uses the same queue idempotency key.
-      return 'Confirmed, but queue dispatch was not acknowledged. Use `confirm ' + review.id + '` again to retry safely, or check its status. Do not submit a new article request.';
+      // The queue may have accepted the message before its acknowledgement was
+      // lost. Preserve any worker progress; never overwrite committed/completed.
+      try {
+        await store.locked(input.reviewId, async () => {
+          const current = await store.get(input.reviewId);
+          if (current?.status === 'approved') await store.save({ ...current, dispatched: false });
+        });
+      } catch (error) {
+        if (!(error instanceof ReviewBusyError)) throw error;
+      }
+      return 'Confirmed, but queue dispatch was not acknowledged. Use `confirm ' + input.reviewId + '` again to retry safely, or check its status. Do not submit a new article request.';
     }
-    return `Confirmed ${review.kind} of “${review.title}”. I will apply the change and check the live website before reporting completion.`;
+    return reply;
   });
 }
