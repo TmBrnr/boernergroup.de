@@ -4,12 +4,17 @@ import { type Chat, type Message } from 'chat';
 import { createHash } from 'node:crypto';
 
 import { getPublishingChat } from './chat';
-import { parsePublisherCommand } from './commands';
+import { cleanPrompt, parsePublisherCommand } from './commands';
 import { canManageArticles, getPublishingConfig } from './config';
 import { friendlyError } from './errors';
-import { enqueuePublishingJob, enqueueDeletionJob, enqueueApprovedJob, type QueuedCover } from './jobs';
-import { reviewCard } from './review-card';
-import { decideStoredReview, getReviewStore } from './reviews';
+import { type QueuedCover } from './jobs';
+import { enqueueJob } from './queue';
+import { confirmCurrent, cancelConversation, releaseAgentTurn } from './agent';
+import { getConversationStore } from './reviews';
+import { isExplicitConfirmation } from './agent-contract';
+import type { AgentJob } from './agent-schema';
+import { postReviewPreview } from './review-card';
+import { getReviewStore } from './reviews';
 
 function getQueuedCover(message: Message): QueuedCover | undefined {
   return message.toJSON().attachments.find((candidate) => candidate.type === 'image' || candidate.mimeType?.startsWith('image/'));
@@ -19,7 +24,8 @@ const HELP = [
   'Create: `new blog post <brief>` or `write an article <brief>`.',
   'Update: `update <article-slug or newsroom URL> <changes>` or `aktualisiere …`.',
   'Delete: `delete <article-slug or newsroom URL>` or `lösche …`.',
-  'I send a full preview first. Confirm or cancel with the buttons, or tag me with `confirm <review-id>` / `cancel <review-id>` in the same thread.',
+  'Mention me in the same thread to edit: “make the intro shorter”, “ändere die Überschrift”, or “use a photo of Frankfurt for the cover”. I can edit drafts and prepare changes to live articles.',
+  'Every revision gets a fresh preview. Confirm with its button or say “okay publish” / “ja veröffentlichen”. Cancel with its button or say “abbrechen”. Mention me in each follow-up; the current Slack installation delivers mentions.',
   'Use `preview <review-id>` or `status <review-id>` to check a request. Previews expire after 24 hours.',
 ].join('\n\n');
 
@@ -30,8 +36,10 @@ export async function decideReview(input: {
   userId: string;
   action: 'confirm' | 'cancel';
 }): Promise<string> {
-  return decideStoredReview(await getReviewStore(), input,
-    (userId) => canManageArticles(getPublishingConfig(), userId), enqueueApprovedJob);
+  if (input.action === 'confirm') return confirmCurrent(input.reviewId, input.threadId, input.userId);
+  const current = await (await getConversationStore()).get(input.threadId);
+  if (current.activeReviewId !== input.reviewId) return 'Use the latest preview in this thread.';
+  return cancelConversation(input.threadId, input.userId);
 }
 
 let handlersRegistered = false;
@@ -66,8 +74,8 @@ export function getPublishingBot(): Chat {
     }
     const command = parsePublisherCommand(message.text, config.siteUrl);
     try {
-      if (command.kind === 'help' || command.kind === 'clarify') {
-        await thread.post(command.kind === 'help' ? HELP : command.message);
+      if (command.kind === 'help') {
+        await thread.post(HELP);
         return;
       }
       if (command.kind === 'confirm' || command.kind === 'cancel') {
@@ -81,7 +89,7 @@ export function getPublishingBot(): Chat {
         } else if (review.expiresAt <= Date.now() || review.status !== 'pending' || command.kind === 'status') {
           await thread.post(`Review ${review.id}: ${review.status === 'pending' && review.expiresAt <= Date.now() ? 'expired' : review.status}.${review.commitUrl ? ` Recovery history: ${review.commitUrl}` : ''}${review.failure ? ` ${review.failure}` : ''}`);
         } else {
-          await thread.post(reviewCard(review, config.siteUrl));
+          await postReviewPreview(thread, review, config.siteUrl);
         }
         return;
       }
@@ -90,13 +98,30 @@ export function getPublishingBot(): Chat {
         threadId: thread.id,
         requestedBy: message.author.userId,
       };
-      if (command.kind === 'delete') {
-        await enqueueDeletionJob({ context, slug: command.slug });
-        await thread.post('I am checking the article and preparing a deletion preview. Nothing will be removed until you confirm.');
-      } else if (command.kind === 'create' || command.kind === 'update') {
-        await enqueuePublishingJob({ context, request: command.request, cover: getQueuedCover(message), slug: command.kind === 'update' ? command.slug : undefined });
-        await thread.post('Queued. I am researching and preparing a full article and cover preview. Nothing will be published or updated until you confirm.');
+      if (/^(?:<@[^>]+>\s*)?(?:cancel|abbrechen|abbruch|stopp|stop)[.!?\s]*$/i.test(cleanPrompt(message.text))) {
+        await thread.post(await cancelConversation(thread.id, message.author.userId));
+        return;
       }
+      const conversation = await (await getConversationStore()).get(thread.id);
+      const active = conversation.activeReviewId ? await (await getReviewStore()).get(conversation.activeReviewId) : null;
+      if (active && !conversation.busyJobId && isExplicitConfirmation(message.text, active.kind)) {
+        await thread.post(await confirmCurrent(active.id, thread.id, message.author.userId));
+        return;
+      }
+      const conversations = await getConversationStore();
+      await conversations.locked(thread.id, async () => {
+        const current = await conversations.get(thread.id);
+        if ((current.pendingTurnIds?.length ?? 0) >= 16) throw new Error('Wait for the current conversation requests to finish.');
+        await conversations.save(thread.id, { ...current, pendingTurnIds: [...new Set([...(current.pendingTurnIds ?? []), context.jobId])] });
+      });
+      try {
+        await enqueueJob({ stage: 'agent-start', context, text: message.text.slice(0, 16_000), cover: getQueuedCover(message), seenReviewId: !conversation.busyJobId && active?.status === 'pending' ? active.id : null, pollCount: 0 } as AgentJob);
+      } catch (error) {
+        await conversations.cancelTask(context.jobId);
+        await releaseAgentTurn(context);
+        throw error;
+      }
+
     } catch (error) {
       console.error('Could not handle Slack publisher command', error);
       await thread.post(`I could not complete this request: ${friendlyError(error)}`);

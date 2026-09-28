@@ -272,3 +272,16 @@ export async function readPublishedArticle(slug: string, config: PublishingConfi
   const parsed = parseFrontmatter<Record<string, unknown>>(raw);
   return { sha: file.sha, raw, ...parsed };
 }
+
+export async function listPublishedArticles(config: PublishingConfig): Promise<{ slug: string }[]> {
+  const entries = await github<{ name: string; type: string }[]>(config,
+    `${repoPath(config)}/contents/content/articles?ref=${encodeURIComponent(config.githubDefaultBranch)}`);
+  return entries.filter((entry) => entry.type === 'file' && entry.name.endsWith('.mdx'))
+    .slice(0, 100).map((entry) => ({ slug: entry.name.slice(0, -4) }));
+}
+
+export async function readPublishedCover(cover: unknown, config: PublishingConfig): Promise<Buffer | null> {
+  if (typeof cover !== 'string' || !/^\/media\/(?:[a-z0-9-]+\/)*[a-z0-9-]+\.(?:jpg|jpeg|png|webp)$/i.test(cover)) return null;
+  const file = await getContentFile(config, `public${cover}`);
+  return file ? Buffer.from(file.content.replace(/\s/g, ''), 'base64') : null;
+}

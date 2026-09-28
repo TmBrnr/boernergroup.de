@@ -12,12 +12,13 @@ export type Review = {
   threadId: string;
   requestedBy: string;
   kind: 'create' | 'update' | 'delete';
-  status: 'pending' | 'approved' | 'cancelled' | 'committed' | 'completed' | 'failed';
+  status: 'pending' | 'editing' | 'superseded' | 'approved' | 'cancelled' | 'committed' | 'completed' | 'failed';
   expiresAt: number;
   slug: string;
   title: string;
   description: string;
   originalSha?: string;
+  originalRaw?: string;
   existingCover?: string;
   draft?: ArticleDraft;
   article?: PreparedArticle;
@@ -50,7 +51,7 @@ export function reviewStore(state: StateAdapter) {
       if (!/^[a-f0-9]{64}$/.test(token)) return null;
       const id = await state.get<string>(tokenKey(token));
       const review = id ? await get(id) : null;
-      return review && review.expiresAt > Date.now() && review.status !== 'cancelled' ? review : null;
+      return review && review.expiresAt > Date.now() && review.status !== 'cancelled' && review.status !== 'superseded' ? review : null;
     },
     async locked<T>(id: string, operation: () => Promise<T>): Promise<T> {
       const lock = await state.acquireLock(`review-lock:${id}`, 120_000);

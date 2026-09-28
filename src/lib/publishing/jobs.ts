@@ -1,6 +1,6 @@
 import 'server-only';
 
-import { send, type MessageMetadata } from '@vercel/queue';
+import { type MessageMetadata } from '@vercel/queue';
 import { Actions, Card, CardText, LinkButton, type Attachment } from 'chat';
 import { z } from 'zod';
 import { serialize } from 'next-mdx-remote/serialize';
@@ -14,10 +14,15 @@ import { isChangeLive } from './deployment';
 import { friendlyError } from './errors';
 import { deleteArticle, publishArticle, readPublishedArticle } from './github';
 import { pollDraftArticle, pollResearchTopic, startDraftArticle, startResearchTopic } from './openai';
-import { reviewCard } from './review-card';
+import { postReviewPreview } from './review-card';
 import { getReviewStore, restoreCover, storedCover, type Review } from './reviews';
 
-export const PUBLISHING_QUEUE_TOPIC = 'boerner-publishing-jobs-v1';
+import { enqueueJob } from './queue';
+export { PUBLISHING_QUEUE_TOPIC } from './queue';
+import { agentJobSchema, revisionJobSchema } from './agent-schema';
+import { processAgent, releaseAgentTurn } from './agent';
+import { processRevision, failRevision } from './revision';
+import { getConversationStore } from './reviews';
 const POLL_DELAY_SECONDS = 10;
 const MAX_POLL_COUNT = 54;
 const contextSchema = z.object({ jobId: z.string().regex(/^[a-f0-9]{32}$/), threadId: z.string().min(1).max(256), requestedBy: z.string().min(1).max(128) });
@@ -44,10 +49,7 @@ export type PublishingJob = z.infer<typeof publishingJobSchema>;
 export type QueuedCover = z.infer<typeof attachmentSchema>;
 export type PublishingJobContext = z.infer<typeof contextSchema>;
 
-async function enqueue(job: PublishingJob, delaySeconds = 0): Promise<void> {
-  const key = `${job.context.jobId}:${job.stage}${'responseId' in job ? `:${job.responseId}` : ''}${'pollCount' in job ? `:${job.pollCount}` : ''}`;
-  await send(PUBLISHING_QUEUE_TOPIC, job, { delaySeconds, idempotencyKey: key, retentionSeconds: 60 * 60 });
-}
+const enqueue = enqueueJob;
 
 export async function enqueuePublishingJob(input: { context: PublishingJobContext; request: string; cover?: QueuedCover; slug?: string }) {
   await enqueue({ stage: 'publish-start', ...input });
@@ -59,7 +61,7 @@ export async function enqueueApprovedJob(review: Review) {
   await enqueue({ stage: 'approved-apply', context: { jobId: review.id, threadId: review.threadId, requestedBy: review.requestedBy } });
 }
 
-async function readQueuedCover(cover: QueuedCover, threadId: string): Promise<PreparedCover> {
+export async function readQueuedCover(cover: QueuedCover, threadId: string): Promise<PreparedCover> {
   const thread = getPublishingChat().thread(threadId);
   const attachment = (thread.adapter.rehydrateAttachment?.(cover as Attachment) ?? cover) as Attachment;
   let bytes: Buffer;
@@ -132,9 +134,11 @@ async function processJob(job: PublishingJob): Promise<void> {
     return;
   }
 
+  const conversations = await getConversationStore();
+  if (await conversations.cancelled(job.context.jobId)) return;
   const existingReview = await store.get(job.context.jobId);
   if (existingReview) {
-    if (existingReview.status === 'pending') await thread.post(reviewCard(existingReview, config.siteUrl));
+    if (existingReview.status === 'pending') { await postReviewPreview(thread, existingReview, config.siteUrl); await conversations.select(job.context.threadId, existingReview.id); }
     return;
   }
   if (job.stage === 'delete-preview') {
@@ -146,7 +150,10 @@ async function processJob(job: PublishingJob): Promise<void> {
       draft: { title: String(existing.data.title ?? job.slug), description: String(existing.data.description ?? ''), categories: Array.isArray(existing.data.categories) ? existing.data.categories.map(String) : [], coverAlt: String(existing.data.coverAlt ?? ''), body: existing.content },
       existingCover: typeof existing.data.cover === 'string' && /^\/media\/[a-z0-9/.-]+$/i.test(existing.data.cover) ? existing.data.cover : undefined,
     });
-    await thread.post(reviewCard(review, config.siteUrl));
+    if (await conversations.cancelled(job.context.jobId)) { await store.save({ ...review, status: 'cancelled' }); return; }
+    await postReviewPreview(thread, review, config.siteUrl);
+    if (await conversations.cancelled(job.context.jobId)) { await store.save({ ...review, status: 'cancelled' }); return; }
+    await conversations.select(job.context.threadId, review.id);
     return;
   }
 
@@ -179,21 +186,40 @@ async function processJob(job: PublishingJob): Promise<void> {
   const review = await store.create({
     id: job.context.jobId, threadId: job.context.threadId, requestedBy: job.context.requestedBy,
     kind: job.target ? 'update' : 'create', slug: article.slug, title: draft.title, description: draft.description,
-    originalSha: job.target?.sha, draft, article, coverBase64: storedCover(cover), sources: job.research.sources,
+    originalSha: job.target?.sha, originalRaw: job.target?.raw, draft, article, coverBase64: storedCover(cover), sources: job.research.sources,
   });
-  await thread.post(reviewCard(review, config.siteUrl));
+  if (await conversations.cancelled(job.context.jobId)) { await store.save({ ...review, status: 'cancelled' }); return; }
+  await postReviewPreview(thread, review, config.siteUrl);
+  if (await conversations.cancelled(job.context.jobId)) { await store.save({ ...review, status: 'cancelled' }); return; }
+  await conversations.select(job.context.threadId, review.id);
 }
 
 export async function processPublishingJob(payload: unknown, metadata: MessageMetadata): Promise<void> {
-  const parsed = publishingJobSchema.safeParse(payload);
+  const parsed = z.union([publishingJobSchema, agentJobSchema, revisionJobSchema]).safeParse(payload);
   if (!parsed.success) {
     // Legacy automatic deletion jobs must never bypass the new approval gate.
     console.error('Discarding invalid or obsolete publishing queue payload', parsed.error.flatten());
     return;
   }
-  try { await processJob(parsed.data); } catch (error) {
+  try {
+    const agent = agentJobSchema.safeParse(parsed.data);
+    const revision = revisionJobSchema.safeParse(parsed.data);
+    if (agent.success) await processAgent(agent.data);
+    else if (revision.success) {
+      if (!canManageArticles(getPublishingConfig(), revision.data.context.requestedBy)) throw new Error('Not authorised.');
+      await processRevision(revision.data);
+    } else await processJob(publishingJobSchema.parse(parsed.data));
+  } catch (error) {
     console.error('Publishing queue job failed', { jobId: parsed.data.context.jobId, stage: parsed.data.stage, deliveryCount: metadata.deliveryCount, error });
     if (metadata.deliveryCount < 3) throw error;
+    const revision = revisionJobSchema.safeParse(parsed.data);
+    if (revision.success) await failRevision(revision.data);
+    if (agentJobSchema.safeParse(parsed.data).success) await releaseAgentTurn(parsed.data.context);
+    const conversations = await getConversationStore();
+    await conversations.locked(parsed.data.context.threadId, async () => {
+      const current = await conversations.get(parsed.data.context.threadId);
+      if (current.busyJobId === parsed.data.context.jobId) await conversations.save(parsed.data.context.threadId, { ...current, busyJobId: undefined });
+    });
     const store = await getReviewStore();
     const review = await store.get(parsed.data.context.jobId);
     const failure = friendlyError(error);

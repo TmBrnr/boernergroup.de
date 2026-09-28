@@ -15,7 +15,8 @@
     "test:blog": "tsx scripts/test-blog-generation.ts",
     "export": "node scripts/export.mjs",
     "serve": "node scripts/serve.mjs",
-    "test:publisher": "node --conditions=react-server --import tsx --test scripts/test-publisher.ts"
+    "test:publisher": "node --conditions=react-server --import tsx --test scripts/test-publisher.ts",
+    "test:publisher-agent": "node --conditions=react-server --import tsx --test scripts/test-publisher-agent.ts"
   },
   "dependencies": {
     "@chat-adapter/slack": "^4.41.0",

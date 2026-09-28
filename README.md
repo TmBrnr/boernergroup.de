@@ -126,7 +126,8 @@ add a company, an article, a talk, a press item or a timeline milestone.
 ## Slack article publisher
 
 The optional Slack integration researches article briefs with OpenAI web search,
-prepares full article and cover previews, and requires explicit confirmation
+edits drafts conversationally in English and German, shows full previews in Slack,
+and requires explicit confirmation
 for publishing, updating, and reversible deletion from Slack. See [docs/SLACK-PUBLISHER.md](docs/SLACK-PUBLISHER.md) for architecture,
 account ownership, permissions, deployment, and usage.
 

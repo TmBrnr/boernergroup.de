@@ -4,88 +4,85 @@ Authorised publishers can create, update, and delete newsroom articles in Slack.
 Every website change requires a preview and a separate explicit confirmation.
 No model response can directly publish, overwrite, or delete content.
 
-## Commands
+## Conversational editor
 
-Tag the bot with an explicit command:
+Mention the bot in a Slack thread, then keep mentioning it in that same thread
+for follow-ups. The installed Slack app receives `app_mention` events; ordinary
+unmentioned replies are not delivered. English and German requests work:
 
 ```text
 @Boerner Publisher new blog post <brief or complete article>
-@Boerner Publisher write an article about <subject and requirements>
-@Boerner Publisher update <newsroom URL or article-slug> <changes to make>
-@Boerner Publisher aktualisiere <newsroom URL> <changes to make>
-@Boerner Publisher delete <newsroom URL or article-slug>
+@Boerner Publisher make the introduction shorter
+@Boerner Publisher ändere die Überschrift und mache den Ton sachlicher
+@Boerner Publisher generate a cover showing the Frankfurt skyline
+@Boerner Publisher remove the text from the current cover
+@Boerner Publisher use the attached image as the cover
+@Boerner Publisher update <newsroom URL> <requested changes>
 @Boerner Publisher lösche <newsroom URL>
-@Boerner Publisher help
+@Boerner Publisher okay publish
+@Boerner Publisher ja veröffentlichen
+@Boerner Publisher abbrechen
 ```
 
-Briefs and update instructions must contain 20–16,000 characters. Deletion
-recognises conversational German requests such as `kannst du … entfernen …`
-and the reported `löscge` typo, but still requires an exact article target.
-Slack links and `www.boernergroup.de` links are accepted. Foreign sites,
-ambiguous targets, missing update instructions, error reports, and ordinary
-conversation receive guidance instead of becoming articles.
+The agent has strictly validated functions to list/read live articles, read the
+current draft, create/revise drafts, generate/edit/upload covers, prepare live
+updates/deletion, show previews, confirm, and cancel. It has no direct repository
+write function. Briefs, article text, and sources are untrusted data. Error
+reports and management requests cannot pass the separate new-article intent gate.
+Ambiguous article targets require clarification.
 
-## Preview and confirmation
+## Slack preview and confirmation
 
-1. **Request.** The bot checks the publisher allowlist and queues preparation.
-   Creation and update use background OpenAI research and structured drafting.
-   Deletion reads the existing article without invoking the model.
-2. **Preview.** The bot stores an immutable snapshot in Redis and posts an
-   **Open full preview** link with **Publish article**, **Confirm update**, or
-   **Confirm deletion**, plus **Cancel**. The full preview contains the article,
-   cover, categories, URL, and research sources. No Git commit is made yet.
-3. **Decision.** An authorised publisher confirms the exact snapshot in its
-   original thread. Opening a preview link never approves anything. Cancelled,
-   expired, already-decided, cross-thread, and unauthorised confirmations cannot
-   enqueue a new mutation. Repeated clicks queue at most one operation.
-4. **Apply.** A durable worker rechecks both requester and approver permissions
-   and applies only the approved snapshot. Update and delete compare the current
-   article SHA with the reviewed SHA. If the article changed, request a fresh
-   preview; confirmation cannot overwrite unseen changes.
-5. **Deploy.** The bot reports that the commit is waiting for deployment. It
-   checks the production URL every 10 seconds, for up to nine minutes. Publication
-   and update require the exact operation marker in the rendered page; deletion
-   requires HTTP 404. Only then does it report completion. A timeout reports a
-   committed but unverified change, with its recovery-history link.
+1. The agent prepares an immutable draft in Redis. It posts **all article text**
+   in Slack, split into messages when needed, plus categories, sources, the cover,
+   and confirmation/cancellation controls. There is no website draft page or
+   draft content commit. An expiring opaque image endpoint supplies the inline
+   Slack cover; the article itself stays in Redis and Slack.
+2. Ask for wording, title, structure, factual, or cover changes in the same
+   thread. Text revisions preserve the cover; cover revisions preserve the text.
+   New factual additions use research. Covers can be newly generated, edited,
+   uploaded, or rendered as abstract editorial artwork. Each revision gets a
+   fresh review ID and preview. Old approval controls become invalid as soon as
+   editing starts. Failed edits retain the previous draft for another attempt.
+3. Confirm the **latest** preview with its button, `okay publish`, or
+   `ja veröffentlichen`. A separate explicit message after the preview is needed.
+   A request such as “make it shorter and publish” cannot approve the resulting
+   unseen revision. Conditional approvals and a plain “okay” are not sufficient.
+   Deletion needs explicit deletion approval, such as `ja löschen`, rather than
+   publication approval. `confirm <review-id>` remains supported.
+4. Cancel stops pending draft work and invalidates its approval. It does not
+   undo an already approved or committed website change. `preview <review-id>`
+   repeats the Slack preview; `status <review-id>` reports operation status.
+5. Only the final approved article and cover are committed, together in **one
+   commit**. Updates preserve URL, publication date and editorial flags. Updates
+   and deletion check the reviewed article SHA to prevent overwriting an unseen
+   change. All permissions are rechecked by the worker. Repeated confirmation
+   applies at most one mutation. The bot checks the deployed website before
+   claiming that the final change is live.
 
-If buttons are unavailable, tag the bot in the original thread:
+Previews expire after 24 hours. Operation and conversation state expires after
+seven days; temporary agent/revision state after 24 hours. Cancellation and
+superseding a review invalidate its image URL. Slack may retain its own messages
+and cached images under the workspace retention policy. Removing a live article
+also removes its dedicated cover; recovery remains possible through Git history.
 
-```text
-@Boerner Publisher preview <review-id>
-@Boerner Publisher status <review-id>
-@Boerner Publisher confirm <review-id>
-@Boerner Publisher cancel <review-id>
-```
-
-Previews expire after 24 hours. Links are opaque bearer links: anyone with the
-link can read its preview until it expires, but only allowlisted Slack users can
-confirm. Pages and images send no-store, no-referrer, and noindex headers, and
-preview paths are excluded from robots and the sitemap. Do not forward a private
-preview link to someone who should not read the draft. Operation state is kept
-in Redis for seven days to support retries and status checks.
-
-To revise a pending draft, cancel it and send a new creation brief. `update`
-targets an existing published article. Updates preserve its URL, original date,
-and existing editorial flags, set `updated`, and version the cover URL so browsers
-do not keep showing an older image. Confirmation applies the previewed bytes
-without another model call or image download.
-
-Attach an image to the creation/update message to use it as the cover. Otherwise
-the bot renders an abstract illustration chosen for the subject, with distinct
-composition, palette, and geometry for each article. These covers are locally
-rendered artwork, not AI-generated photographs. Alt text describes the actual
-illustration. Research with no sources stops before drafting. Invalid MDX stops
-before the review is offered.
+Draft preparation uses durable background Responses API jobs and a bounded
+function-calling loop. Image changes use the Responses image-generation tool and
+an accessible caption describing the generated image. Default initial covers
+remain locally rendered editorial artwork unless a different image is requested.
+Research without sources or invalid MDX stops before a review is offered.
 
 ## Ownership and configuration
 
 Keep the Slack app, OpenAI project, repository credential, and Redis database in
 the website owner's accounts. OpenAI API usage has separate billing from ChatGPT
 subscriptions. Reuse the existing integration credentials for this fix; no new
-key, scope, or service is required.
+key, scope, or service is required. Image generation adds OpenAI API usage.
+`OPENAI_IMAGE_MODEL` optionally overrides the image-generation model
+(default `gpt-image-2.5-sunburst`).
 
 Deploy the Node site to the Git-connected Vercel project. Static export supports
-the public website but excludes the Slack API and private preview routes.
+the public website but excludes the Slack API and inline cover endpoint.
 
 Required configuration is listed in `.env.example`:
 
@@ -134,6 +131,7 @@ through its deployment environment. Each function stays within its configured
 ## Verification
 
 ```bash
+npm run test:publisher-agent   # focused conversational editor and approval checks
 npm run test:publisher         # offline regression tests; no external writes
 npm run typecheck
 npm run lint
