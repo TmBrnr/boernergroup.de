@@ -1,6 +1,6 @@
 display_information:
   name: Boerner Publisher
-  description: Publishes and deletes boernergroup.de newsroom articles from Slack
+  description: Previews, publishes, updates and deletes newsroom articles with confirmation
   background_color: "#171714"
 features:
   bot_user:

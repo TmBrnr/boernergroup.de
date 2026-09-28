@@ -1,192 +1,178 @@
 # Slack article publisher
 
-The publisher lets authorised people create and delete newsroom articles without
-leaving Slack. There is no pull-request review or separate GitHub approval step.
+Authorised publishers can create, update, and delete newsroom articles in Slack.
+Every website change requires a preview and a separate explicit confirmation.
+No model response can directly publish, overwrite, or delete content.
 
-## What happens when the bot is tagged
+## Commands
 
-For a normal article brief, the bot:
+Tag the bot with an explicit command:
 
-1. places the request on a durable Vercel Queue;
-2. researches current sources with OpenAI web search in background mode;
-3. drafts structured MDX in the site's existing editorial style;
-4. validates the generated MDX;
-5. prepares an attached cover image or creates a branded cover automatically;
-6. commits the article and cover atomically to the production branch; and
-7. replies in the original Slack thread with the article URL and recovery-history commit.
+```text
+@Boerner Publisher new blog post <brief or complete article>
+@Boerner Publisher write an article about <subject and requirements>
+@Boerner Publisher update <newsroom URL or article-slug> <changes to make>
+@Boerner Publisher aktualisiere <newsroom URL> <changes to make>
+@Boerner Publisher delete <newsroom URL or article-slug>
+@Boerner Publisher lösche <newsroom URL>
+@Boerner Publisher help
+```
 
-A Git-connected host such as Vercel then deploys the new commit. There is no
-Publish button and no GitHub check to click through.
+Briefs and update instructions must contain 20–16,000 characters. Deletion
+recognises conversational German requests such as `kannst du … entfernen …`
+and the reported `löscge` typo, but still requires an exact article target.
+Slack links and `www.boernergroup.de` links are accepted. Foreign sites,
+ambiguous targets, missing update instructions, error reports, and ordinary
+conversation receive guidance instead of becoming articles.
 
-Deletion is also handled in Slack. An explicit `delete` command removes the MDX
-article and its dedicated cover in one atomic commit. It is destructive on the
-live site, but recoverable by reverting the linked Git commit.
+## Preview and confirmation
 
-## Ownership and billing
+1. **Request.** The bot checks the publisher allowlist and queues preparation.
+   Creation and update use background OpenAI research and structured drafting.
+   Deletion reads the existing article without invoking the model.
+2. **Preview.** The bot stores an immutable snapshot in Redis and posts an
+   **Open full preview** link with **Publish article**, **Confirm update**, or
+   **Confirm deletion**, plus **Cancel**. The full preview contains the article,
+   cover, categories, URL, and research sources. No Git commit is made yet.
+3. **Decision.** An authorised publisher confirms the exact snapshot in its
+   original thread. Opening a preview link never approves anything. Cancelled,
+   expired, already-decided, cross-thread, and unauthorised confirmations cannot
+   enqueue a new mutation. Repeated clicks queue at most one operation.
+4. **Apply.** A durable worker rechecks both requester and approver permissions
+   and applies only the approved snapshot. Update and delete compare the current
+   article SHA with the reviewed SHA. If the article changed, request a fresh
+   preview; confirmation cannot overwrite unseen changes.
+5. **Deploy.** The bot reports that the commit is waiting for deployment. It
+   checks the production URL every 10 seconds, for up to nine minutes. Publication
+   and update require the exact operation marker in the rendered page; deletion
+   requires HTTP 404. Only then does it report completion. A timeout reports a
+   committed but unverified change, with its recovery-history link.
 
-Create the Slack app, OpenAI project key, GitHub token, and Redis database in the
-website owner's accounts. You can perform setup while invited as an admin; do
-not ask for or use the owner's password.
+If buttons are unavailable, tag the bot in the original thread:
 
-ChatGPT Plus, Pro, Business, and Enterprise subscriptions do not include OpenAI
-API usage. `OPENAI_API_KEY` belongs to an API project with separate usage billing
-and limits.
+```text
+@Boerner Publisher preview <review-id>
+@Boerner Publisher status <review-id>
+@Boerner Publisher confirm <review-id>
+@Boerner Publisher cancel <review-id>
+```
 
-## 1. Deploy the webhook
+Previews expire after 24 hours. Links are opaque bearer links: anyone with the
+link can read its preview until it expires, but only allowlisted Slack users can
+confirm. Pages and images send no-store, no-referrer, and noindex headers, and
+preview paths are excluded from robots and the sitemap. Do not forward a private
+preview link to someone who should not read the draft. Operation state is kept
+in Redis for seven days to support retries and status checks.
 
-Deploy the Node version of the site to Vercel or another Node host. Static export
-continues to work for the public pages, but the Slack webhook needs a live route:
+To revise a pending draft, cancel it and send a new creation brief. `update`
+targets an existing published article. Updates preserve its URL, original date,
+and existing editorial flags, set `updated`, and version the cover URL so browsers
+do not keep showing an older image. Confirmation applies the previewed bytes
+without another model call or image download.
+
+Attach an image to the creation/update message to use it as the cover. Otherwise
+the bot renders an abstract illustration chosen for the subject, with distinct
+composition, palette, and geometry for each article. These covers are locally
+rendered artwork, not AI-generated photographs. Alt text describes the actual
+illustration. Research with no sources stops before drafting. Invalid MDX stops
+before the review is offered.
+
+## Ownership and configuration
+
+Keep the Slack app, OpenAI project, repository credential, and Redis database in
+the website owner's accounts. OpenAI API usage has separate billing from ChatGPT
+subscriptions. Reuse the existing integration credentials for this fix; no new
+key, scope, or service is required.
+
+Deploy the Node site to the Git-connected Vercel project. Static export supports
+the public website but excludes the Slack API and private preview routes.
+
+Required configuration is listed in `.env.example`:
+
+- `OPENAI_API_KEY`, `OPENAI_MODEL`, `OPENAI_REASONING_EFFORT`
+- `SLACK_BOT_TOKEN`, `SLACK_SIGNING_SECRET`
+- `REDIS_URL` (or a Marketplace variable ending in `_REDIS_URL`)
+- `GITHUB_TOKEN`, `GITHUB_REPOSITORY`, `GITHUB_DEFAULT_BRANCH`
+- `SLACK_PUBLISHER_USER_IDS` (comma-separated Slack member IDs)
+- `NEXT_PUBLIC_SITE_URL` and optional `PUBLISHER_BOT_NAME`
+
+An empty publisher list denies every command and confirmation. The bot is usable
+in any channel where it is installed. It listens only to `app_mention`, without
+subscribing to ordinary conversations.
+
+### Slack app
+
+Use `slack-app-manifest.yml`. Required bot scopes remain `app_mentions:read`,
+`chat:write`, and `files:read`. Both Event Subscriptions and **Interactivity &
+Shortcuts** must point to:
 
 ```text
 https://boernergroup.de/api/webhooks/slack
 ```
 
-Use Node.js 22 or newer. Provision a serverless-compatible Redis database and
-set the variables in `.env.example`. Connect the host to the repository's
-production branch so each bot commit triggers a deployment.
+The existing manifest already enables interactivity. Confirm it is enabled in the
+installed app if button clicks do not reach the webhook. Typed confirmation is
+available through mentions regardless of the interactivity setting.
 
-Vercel Marketplace Redis integrations sometimes expose a project-prefixed
-variable such as `MY_STORE_REDIS_URL`. The publisher accepts either that form or
-the conventional `REDIS_URL` name.
+### GitHub and deployment
 
-The Slack webhook only validates and queues the command, so it returns quickly.
-The queue consumer splits publishing into short, retryable stages. Long OpenAI
-work runs through the background Responses API and is polled by delayed queue
-messages, keeping every Vercel Function within the Hobby plan's 60-second limit.
-Vercel provisions Queue authentication automatically for deployments; no queue
-API token is stored in Production.
+Use a fine-grained token restricted to this repository with Contents read/write.
+The production branch must allow the dedicated bot credential to commit. Each
+mutation is one atomic, non-force Git commit recording the requester, approver,
+and operation ID. Concurrent branch advancement fails safely and retries.
 
-### Local environment file
+Deletion and update only remove cover files dedicated to that article's slug;
+shared editorial assets are retained. Revert the linked commit to recover a
+mutation. Legacy automatic deletion jobs are discarded after deployment, and
+old drafting jobs can only produce a preview.
 
-The ignored `.env.local` file in the project root now contains every setting
-needed for the local generation test and the deployed bot. Fill values directly
-after each `=`. Do not commit this file.
+Vercel Queues runs bounded, retryable stages; background Responses API jobs are
+polled rather than keeping a webhook open. Vercel supplies queue credentials
+through its deployment environment. Each function stays within its configured
+60-second limit. Do not upload a `VERCEL_OIDC_TOKEN` manually.
 
-Only these values are needed for a real local generation test:
-
-```text
-OPENAI_API_KEY=
-OPENAI_MODEL=gpt-6-luna
-OPENAI_REASONING_EFFORT=high
-```
-
-Run the offline pipeline smoke test first:
+## Verification
 
 ```bash
-npm run test:blog -- --fixture
+npm run test:publisher         # offline regression tests; no external writes
+npm run typecheck
+npm run lint
+npm run build
+npm run test:blog -- --fixture # local generation output; no Slack/GitHub calls
+npm run export                # public static website, without private routes
 ```
 
-Then run a real researched generation after adding the API key:
+The publisher regression suite covers the reported English error text, German
+delete requests and typos, explicit creation/update commands, permissions,
+thread binding, expiry, cancellation, concurrent/repeated confirmations, queue
+failure recovery, immutable previews, stale Git snapshots, non-force deletion,
+cover variation, preserved update metadata, and live deployment checks.
 
-```bash
-npm run test:blog -- "Write an article about practical European AI sovereignty"
-```
+For a live generation-only test, use `npm run test:blog -- "Write an article
+about practical European AI sovereignty"`. It uses the configured OpenAI key
+and writes MDX, cover, and research under ignored `.local-previews/`; it never
+contacts Slack or GitHub. Do not print or commit `.env.local`.
 
-Both commands write `article.mdx`, `cover.jpg`, and `research.json` under the
-ignored `.local-previews/` directory. They never call Slack or GitHub and do not
-publish anything.
+After deploying, use a real authorised Slack mention to create a draft. Check
+that the full preview is readable and the public article URL remains absent
+until confirmation. Cancel once, then confirm a fresh draft and check the live
+completion reply. Test an update and a deletion the same way with a disposable
+article. These checks post messages and change public content, so do them only
+with an explicitly designated test article and channel.
 
-Once `.env.local` is complete, add the same non-empty values to the linked
-Vercel project's Production environment through the dashboard or with
-`vercel env add NAME production`. Use Sensitive visibility for API keys, Slack
-secrets, Redis URLs, and GitHub tokens. Do not upload `VERCEL_OIDC_TOKEN`; Vercel
-manages it automatically. Note that `vercel env pull .env.local` replaces the
-local file, so back it up before pulling.
+## Incident resolution: 28 September 2026
 
-The complete Slack flow uses Vercel Queues. To run that flow locally with
-`vercel dev`, link the project and pull its development environment so the
-Queues SDK receives a short-lived local credential. The standalone
-`npm run test:blog` command does not need queue credentials.
+The old handler accepted every sufficiently long mention as an article brief,
+only recognised English deletion commands at the beginning of a message, and
+announced publication immediately after a Git commit. Its covers shared a fixed
+prominent illustration. These behaviours caused the incident in the supplied
+Slack transcript.
 
-`SLACK_PUBLISHER_USER_IDS` is mandatory and controls both publishing and
-deletion. Use Slack member IDs such as `U012ABCDEF`, separated by commas. The
-bot may be used in every channel where it is installed, while an empty
-publisher list denies every content-changing command.
+The fix removes the three accidental articles and their dedicated covers:
 
-## 2. Create the Slack app
+- `a-page-not-found-message-isn-t-an-article-brief`
+- `ich-kann-den-website-eintrag-nicht-selbst-loschen`
+- `ich-kann-den-eintrag-nicht-selbst-entfernen`
 
-1. Open [Slack API: Your Apps](https://api.slack.com/apps) in the client's
-   workspace and choose **Create New App → From an app manifest**.
-2. Paste `slack-app-manifest.yml` and create the app.
-3. Copy the Signing Secret to `SLACK_SIGNING_SECRET`.
-4. Install the app to the workspace and copy the Bot User OAuth Token to
-   `SLACK_BOT_TOKEN`.
-5. Invite the bot to the allowed channels.
-
-The manifest requests only `app_mentions:read`, `chat:write`, and `files:read`.
-It subscribes only to `app_mention`; the bot does not monitor ordinary channel
-conversation or automatically subscribe itself to threads.
-
-## 3. Create the GitHub credential
-
-Use a fine-grained personal access token owned by the client or a dedicated
-service account. Restrict it to `TmBrnr/boernergroup.de` and grant only:
-
-- Contents: read and write
-
-Set `GITHUB_TOKEN`, `GITHUB_REPOSITORY`, and `GITHUB_DEFAULT_BRANCH`. If `main`
-has branch protection, configure it to allow this dedicated credential to push,
-or use a dedicated production branch that the host deploys. The token is used
-only by deterministic server code and is never sent to OpenAI.
-
-## 4. Create the OpenAI credential
-
-Create a project in the [OpenAI API platform](https://platform.openai.com/) and
-store its project API key as `OPENAI_API_KEY`. Configure project spend limits
-and keep `OPENAI_MODEL` configurable. The integration uses the Responses API,
-structured outputs, image understanding for attached covers, and the hosted web
-search tool. Foreground local-test responses and queued background responses
-are sent with `store: false`. Background results remain available temporarily
-while the queue polls them and are not retained as long-lived stored responses.
-
-## Slack commands
-
-Publish from a brief:
-
-```text
-@Boerner Publisher Write a 900-word analysis of the latest EU AI Act compliance
-timeline for German mid-market technology companies. Focus on practical
-leadership decisions, use primary sources, and avoid legal advice.
-```
-
-An optional landscape image attached to the same Slack message becomes the
-cover. Without one, the bot creates a text-free abstract cover in the site's
-existing dark technical illustration style.
-
-Delete using a slug:
-
-```text
-@Boerner Publisher delete sovereign-european-ai
-```
-
-Or paste the full article URL:
-
-```text
-@Boerner Publisher delete https://boernergroup.de/newsroom/sovereign-european-ai
-```
-
-Show the short command reference:
-
-```text
-@Boerner Publisher help
-```
-
-## Operational safeguards
-
-- Slack request signatures are verified.
-- Redis provides webhook deduplication and per-thread locking.
-- Vercel Queues provides durable delivery, delayed polling, and bounded retries.
-- Queue sends and GitHub commits use idempotency markers so Slack retries do not
-  intentionally create duplicate model runs or duplicate repository changes.
-- Only explicitly listed publisher IDs can change content.
-- Web content is treated as untrusted source material, not instructions.
-- Generated MDX rejects imports, scripts, iframes, event handlers, JavaScript
-  URLs, and arbitrary MDX expressions.
-- The model has no shell, GitHub token, or general-purpose repository tool.
-- Publish refuses to overwrite an existing slug.
-- Publish and delete use atomic, non-force Git commits; a concurrent branch
-  update fails safely instead of overwriting another change.
-- Delete only accepts a normalised newsroom slug and only removes its article
-  plus a cover inside `public/media/articles/`.
-- Every mutation returns a commit link that can be reverted for recovery.
-- Errors are logged server-side and sanitised before being posted to Slack.
+The valid Frankfurt AI-sovereignty article is preserved. The initial 404 was a
+deployment delay; that article was live when investigated.

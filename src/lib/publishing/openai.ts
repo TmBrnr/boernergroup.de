@@ -17,6 +17,15 @@ export type ResearchResult = {
 function researchResult(response: OpenAI.Responses.Response): ResearchResult {
   const sources = new Set<string>();
   for (const item of response.output) {
+    if (item.type === 'message') {
+      for (const part of item.content) {
+        if (part.type === 'output_text') {
+          for (const annotation of part.annotations) {
+            if (annotation.type === 'url_citation') sources.add(annotation.url);
+          }
+        }
+      }
+    }
     if (item.type !== 'web_search_call') continue;
     if (item.action.type === 'search') {
       for (const source of item.action.sources ?? []) sources.add(source.url);
@@ -25,7 +34,10 @@ function researchResult(response: OpenAI.Responses.Response): ResearchResult {
     }
   }
 
-  return { brief: response.output_text, sources: [...sources].slice(0, 20) };
+  const validSources = [...sources].filter((url) => {
+    try { return /^https?:$/.test(new URL(url).protocol); } catch { return false; }
+  });
+  return { brief: response.output_text, sources: validSources.slice(0, 20) };
 }
 
 function terminalResponseError(response: OpenAI.Responses.Response): Error {

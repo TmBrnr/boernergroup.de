@@ -2,7 +2,7 @@ import sharp from 'sharp';
 import { z } from 'zod';
 
 import { getArticles } from '@/lib/articles';
-import { stringifyFrontmatter } from '@/lib/frontmatter';
+import { parseFrontmatter, stringifyFrontmatter } from '@/lib/frontmatter';
 import { slugify } from '@/lib/utils';
 
 const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
@@ -86,66 +86,57 @@ function seededRandom(value: string): () => number {
   };
 }
 
+function coverTheme(draft: ArticleDraft): 'sovereignty' | 'ai' | 'business' {
+  const topic = `${draft.title} ${draft.categories.join(' ')}`.toLowerCase();
+  return /sovereign|souver|europe|europa|control|security/.test(topic) ? 'sovereignty'
+    : /ai|intelligence|model|technology|technologie/.test(topic) ? 'ai' : 'business';
+}
+
+export function generatedCoverAlt(draft: ArticleDraft): string {
+  const theme = coverTheme(draft);
+  return theme === 'sovereignty' ? 'Abstract editorial illustration of concentric boundaries and connected nodes on a dark background.'
+    : theme === 'ai' ? 'Abstract editorial illustration of layered computational grids on a dark background.'
+    : 'Abstract editorial illustration of rising geometric columns and connecting trajectories on a dark background.';
+}
+
 export async function createGeneratedCover(draft: ArticleDraft): Promise<PreparedCover> {
-  const random = seededRandom(`${draft.title}|${draft.categories.join('|')}`);
-  const trajectories = Array.from({ length: 18 }, (_, index) => {
-    const startY = 115 + index * 41 + Math.round(random() * 28);
-    const controlY = Math.max(70, startY - 40 - Math.round(random() * 170));
-    const endY = Math.max(60, startY - 20 - Math.round(random() * 230));
-    const opacity = (0.1 + random() * 0.14).toFixed(2);
-    return `<path d="M -80 ${startY} C 420 ${startY + 80}, 920 ${controlY}, 1680 ${endY}" fill="none" stroke="#aeb6bd" stroke-opacity="${opacity}" stroke-width="1.4"/>`;
-  }).join('');
-  const marketNodes = Array.from({ length: 28 }, (_, index) => {
-    const x = 155 + Math.round(random() * 1290);
-    const y = 115 + Math.round(random() * 660);
-    const radius = index % 7 === 0 ? 5 : 2.5;
-    const opacity = (0.16 + random() * 0.3).toFixed(2);
-    return `<circle cx="${x}" cy="${y}" r="${radius}" fill="#c8ced3" fill-opacity="${opacity}"/>`;
-  }).join('');
-  const svg = `
-    <svg width="1600" height="900" viewBox="0 0 1600 900" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <radialGradient id="glow" cx="72%" cy="42%" r="72%">
-          <stop offset="0" stop-color="#173673" stop-opacity="0.34"/>
-          <stop offset="0.45" stop-color="#18243b" stop-opacity="0.2"/>
-          <stop offset="1" stop-color="#0d1015" stop-opacity="0"/>
-        </radialGradient>
-        <filter id="grain" x="0" y="0" width="100%" height="100%">
-          <feTurbulence type="fractalNoise" baseFrequency="0.82" numOctaves="3" seed="17"/>
-          <feColorMatrix type="saturate" values="0"/>
-          <feComponentTransfer><feFuncA type="table" tableValues="0 0.08"/></feComponentTransfer>
-        </filter>
-        <filter id="softGlow" x="-80%" y="-80%" width="260%" height="260%">
-          <feGaussianBlur stdDeviation="12"/>
-        </filter>
-      </defs>
-      <rect width="1600" height="900" fill="#0d1015"/>
-      <rect width="1600" height="900" fill="url(#glow)"/>
-      ${trajectories}
-      ${marketNodes}
-      <path d="M 105 735 C 360 690, 520 625, 710 590 S 1015 480, 1190 365 S 1400 260, 1515 150" fill="none" stroke="#315fdd" stroke-opacity="0.22" stroke-width="20" filter="url(#softGlow)"/>
-      <path d="M 105 735 C 360 690, 520 625, 710 590 S 1015 480, 1190 365 S 1400 260, 1515 150" fill="none" stroke="#4f7cff" stroke-width="2.5"/>
-      <g fill="#4f7cff">
-        <circle cx="360" cy="690" r="6"/><circle cx="710" cy="590" r="6"/>
-        <circle cx="1015" cy="480" r="6"/><circle cx="1190" cy="365" r="6"/>
-        <circle cx="1400" cy="260" r="6"/>
-      </g>
-      <rect x="1477" y="112" width="76" height="76" fill="none" stroke="#c8ced3" stroke-opacity="0.82" stroke-width="3"/>
-      <circle cx="1515" cy="150" r="8" fill="#dce2e8"/>
-      <rect width="1600" height="900" filter="url(#grain)" opacity="0.55"/>
-    </svg>`;
-
-  const bytes = await sharp(Buffer.from(svg))
-    .resize(1600, 900, { fit: 'cover' })
-    .jpeg({ quality: 88, mozjpeg: true })
-    .toBuffer();
-
-  return {
-    bytes,
-    dataUrl: `data:image/jpeg;base64,${bytes.toString('base64')}`,
-    width: 1600,
-    height: 900,
-  };
+  const random = seededRandom(`${draft.title}|${draft.description}|${draft.categories.join('|')}|${draft.body.slice(0, 600)}`);
+  const theme = coverTheme(draft);
+  const colors = ['#4f7cff', '#4bada0', '#b594d9', '#bc9463', '#729bca'];
+  const accent = colors[Math.floor(random() * colors.length)];
+  const centerX = 650 + Math.round(random() * 400);
+  const centerY = 340 + Math.round(random() * 200);
+  const rotation = Math.round(random() * 80 - 40);
+  let shapes: string;
+  if (theme === 'sovereignty') {
+    shapes = Array.from({ length: 7 }, (_, i) => {
+      const radius = 65 + i * (30 + random() * 25);
+      const angle = random() * Math.PI * 2;
+      const x = Math.round(centerX + Math.cos(angle) * radius);
+      const y = Math.round(centerY + Math.sin(angle) * radius);
+      return `<circle cx="${centerX}" cy="${centerY}" r="${radius}" fill="none" stroke="${accent}" stroke-opacity="${0.2 + i * 0.09}" stroke-width="${i % 3 === 0 ? 3 : 1}"/><path d="M ${centerX} ${centerY} L ${x} ${y}" stroke="${accent}" opacity="0.4"/><circle cx="${x}" cy="${y}" r="${5 + random() * 9}" fill="${accent}"/>`;
+    }).join('');
+  } else if (theme === 'ai') {
+    shapes = Array.from({ length: 6 }, (_, i) => {
+      const x = 300 + i * 95 + random() * 80;
+      const y = 160 + i * 55;
+      const cells = Array.from({ length: 6 }, (_, j) => `<path d="M ${x + j * 65} ${y} v 330 M ${x} ${y + j * 55} h 390" stroke="${accent}" stroke-opacity="${0.15 + random() * 0.35}"/>`).join('');
+      return `<rect x="${x}" y="${y}" width="390" height="330" fill="#101720" fill-opacity="0.25" stroke="${accent}" stroke-opacity="0.65"/>${cells}`;
+    }).join('');
+  } else {
+    shapes = Array.from({ length: 10 }, (_, i) => {
+      const height = 70 + random() * 340 + i * 20;
+      return `<rect x="${220 + i * 115}" y="${720 - height}" width="${40 + random() * 40}" height="${height}" rx="4" fill="${accent}" fill-opacity="${0.15 + random() * 0.5}"/><circle cx="${245 + i * 115}" cy="${700 - height}" r="6" fill="${accent}"/>`;
+    }).join('');
+  }
+  const svg = `<svg width="1600" height="900" xmlns="http://www.w3.org/2000/svg">
+    <defs><radialGradient id="glow" cx="${centerX / 16}%" cy="${centerY / 9}%" r="65%"><stop stop-color="${accent}" stop-opacity="0.22"/><stop offset="1" stop-color="#0d1015" stop-opacity="0"/></radialGradient></defs>
+    <rect width="1600" height="900" fill="#0d1015"/><rect width="1600" height="900" fill="url(#glow)"/>
+    <g transform="rotate(${rotation} 800 450)">${shapes}</g>
+    <path d="M 100 800 H 1500 M 100 100 V 800" stroke="#dce2e8" stroke-opacity="0.12"/>
+  </svg>`;
+  const bytes = await sharp(Buffer.from(svg)).jpeg({ quality: 88, mozjpeg: true }).toBuffer();
+  return { bytes, dataUrl: `data:image/jpeg;base64,${bytes.toString('base64')}`, width: 1600, height: 900 };
 }
 
 function validateMdx(body: string): string {
@@ -158,22 +149,34 @@ function validateMdx(body: string): string {
     /[{}]/,
   ];
 
-  if (forbidden.some((pattern) => pattern.test(trimmed))) {
+  const unsupportedTag = [...trimmed.matchAll(/<\/?([A-Za-z][\w-]*)([^>]*)>/g)]
+    .some((match) => match[1] !== 'Aside' || match[2].trim() !== '');
+  if (unsupportedTag || forbidden.some((pattern) => pattern.test(trimmed))) {
     throw new Error('The generated article contained unsafe MDX and was not committed.');
   }
 
   return trimmed;
 }
 
-export function prepareArticle(draft: ArticleDraft): PreparedArticle {
-  const slug = slugify(draft.title);
-  if (!slug) throw new Error('The generated title did not produce a valid URL slug.');
+export function prepareArticle(draft: ArticleDraft, options: {
+  slug?: string;
+  originalRaw?: string;
+  operationId?: string;
+} = {}): PreparedArticle {
+  articleDraftSchema.parse(draft);
+  const slug = options.slug ?? slugify(draft.title);
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) throw new Error('The generated title did not produce a valid URL slug.');
 
-  const coverPath = `/media/articles/${slug}.jpg`;
+  const revision = options.originalRaw && options.operationId ? `-${options.operationId.slice(0, 8)}` : '';
+  const coverPath = `/media/articles/${slug}${revision}.jpg`;
+  const original = options.originalRaw ? parseFrontmatter<Record<string, unknown>>(options.originalRaw).data : {};
   const data = {
+    ...original,
     title: draft.title.trim(),
     description: draft.description.trim(),
-    date: new Date().toISOString().slice(0, 10),
+    date: original.date ?? new Date().toISOString().slice(0, 10),
+    ...(options.originalRaw ? { updated: new Date().toISOString().slice(0, 10) } : {}),
+    ...(options.operationId ? { publisherOperation: options.operationId } : {}),
     categories: [...new Set(draft.categories.map((category) => category.trim()).filter(Boolean))],
     cover: coverPath,
     coverAlt: draft.coverAlt.trim(),

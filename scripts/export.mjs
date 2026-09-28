@@ -12,6 +12,8 @@ import path from 'node:path';
 const ROOT = path.join(import.meta.dirname, '..');
 const API = path.join(ROOT, 'src', 'app', 'api');
 const PARKED = path.join(ROOT, '.api.parked');
+const PUBLISHER = path.join(ROOT, 'src', 'app', 'publisher');
+const PARKED_PUBLISHER = path.join(ROOT, '.publisher.parked');
 const OUT = path.join(ROOT, 'out');
 const NEXT_CACHE = path.join(ROOT, '.next');
 
@@ -22,6 +24,7 @@ const MOVED = [
 ];
 
 function restore() {
+  if (fs.existsSync(PARKED_PUBLISHER)) fs.renameSync(PARKED_PUBLISHER, PUBLISHER);
   if (fs.existsSync(PARKED)) {
     fs.rmSync(API, { recursive: true, force: true });
     fs.renameSync(PARKED, API);
@@ -40,6 +43,7 @@ try {
   // are parked for the static-only build.
   fs.rmSync(NEXT_CACHE, { recursive: true, force: true });
   if (fs.existsSync(API)) fs.renameSync(API, PARKED);
+  if (fs.existsSync(PUBLISHER)) fs.renameSync(PUBLISHER, PARKED_PUBLISHER);
 
   execSync('next build', {
     cwd: ROOT,

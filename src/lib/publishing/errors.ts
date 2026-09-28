@@ -10,6 +10,13 @@ export function friendlyError(error: unknown): string {
     return 'The AI service is temporarily rate-limited. Please try again shortly.';
   }
   const safeMessages = [
+    /^This review /,
+    /^The article changed /,
+    /^Research returned /,
+    /^The requester /,
+    /^This change /,
+    /^This preview /,
+    /^This deletion /,
     /^The cover image /,
     /^The attached file /,
     /^Slack did not /,

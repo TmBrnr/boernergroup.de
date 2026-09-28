@@ -29,16 +29,19 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
     return buildMetadata({ title: 'Not found', description: '', path: '/newsroom', noIndex: true });
   }
 
-  return buildMetadata({
-    title: article.title,
-    description: article.description,
-    path: `/newsroom/${article.slug}`,
-    image: article.cover,
-    type: 'article',
-    publishedTime: new Date(article.date).toISOString(),
-    modifiedTime: new Date(article.updated ?? article.date).toISOString(),
-    keywords: [...article.categories, 'Tobias Börner'],
-  });
+  return {
+    ...buildMetadata({
+      title: article.title,
+      description: article.description,
+      path: `/newsroom/${article.slug}`,
+      image: article.cover,
+      type: 'article',
+      publishedTime: new Date(article.date).toISOString(),
+      modifiedTime: new Date(article.updated ?? article.date).toISOString(),
+      keywords: [...article.categories, 'Tobias Börner'],
+    }),
+    other: article.publisherOperation ? { 'publisher-operation': article.publisherOperation } : undefined,
+  };
 }
 
 export default async function ArticlePage({ params }: Params) {

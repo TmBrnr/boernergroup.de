@@ -5,6 +5,7 @@ import { loadEnvConfig } from '@next/env';
 
 import {
   createGeneratedCover,
+  generatedCoverAlt,
   prepareArticle,
   type ArticleDraft,
 } from '../src/lib/publishing/article';
@@ -62,7 +63,7 @@ async function writePreview(draft: ArticleDraft, research: ResearchResult): Prom
   const cover = await createGeneratedCover(draft);
   const article = prepareArticle({
     ...draft,
-    coverAlt: 'Abstract dark editorial illustration with blue market trajectories and geometric nodes.',
+    coverAlt: generatedCoverAlt(draft),
   });
   const outputDirectory = path.join(process.cwd(), '.local-previews', article.slug);
 

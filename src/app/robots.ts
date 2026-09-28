@@ -11,13 +11,13 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: '*',
         allow: '/',
-        disallow: ['/api/'],
+        disallow: ['/api/', '/publisher/'],
       },
       // Explicitly welcome answer engines. This content is meant to be cited.
       {
         userAgent: ['GPTBot', 'OAI-SearchBot', 'ChatGPT-User', 'ClaudeBot', 'Claude-Web', 'PerplexityBot', 'Google-Extended', 'Applebot-Extended'],
         allow: '/',
-        disallow: ['/api/'],
+        disallow: ['/api/', '/publisher/'],
       },
     ],
     sitemap: `${SITE_URL}/sitemap.xml`,

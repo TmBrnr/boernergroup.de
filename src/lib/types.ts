@@ -106,6 +106,7 @@ export type Award = {
 export type Faq = { question: string; answer: string };
 
 export type ArticleFrontmatter = {
+  publisherOperation?: string;
   title: string;
   description: string;
   date: string;
