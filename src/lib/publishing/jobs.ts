@@ -7,6 +7,7 @@ import { serialize } from 'next-mdx-remote/serialize';
 import remarkGfm from 'remark-gfm';
 
 import { createGeneratedCover, generatedCoverAlt, prepareArticle, prepareCover, type PreparedCover } from './article';
+import { singleWorkspaceAttachment } from './image-context';
 import { getPublishingChat } from './chat';
 import { MAX_BRIEF_LENGTH } from './commands';
 import { canManageArticles, getPublishingConfig } from './config';
@@ -64,7 +65,8 @@ export async function enqueueApprovedJob(review: Review) {
 
 export async function readQueuedCover(cover: QueuedCover, threadId: string): Promise<PreparedCover> {
   const thread = getPublishingChat().thread(threadId);
-  const attachment = (thread.adapter.rehydrateAttachment?.(cover as Attachment) ?? cover) as Attachment;
+  const queued = singleWorkspaceAttachment(cover);
+  const attachment = (thread.adapter.rehydrateAttachment?.(queued as Attachment) ?? queued) as Attachment;
   let bytes: Buffer;
   if (attachment.fetchData) bytes = Buffer.from(await attachment.fetchData());
   else if (Buffer.isBuffer(attachment.data)) bytes = attachment.data;

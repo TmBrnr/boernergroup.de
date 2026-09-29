@@ -17,6 +17,9 @@ unmentioned replies are not delivered. English and German requests work:
 @Boerner Publisher generate a cover showing the Frankfurt skyline
 @Boerner Publisher remove the text from the current cover
 @Boerner Publisher use the attached image as the cover
+@Boerner Publisher tausche das Titelbild gegen das beigefügte Bild aus
+@Boerner Publisher use the picture I attached earlier
+@Boerner Publisher edit the attached picture: remove the background
 @Boerner Publisher update <newsroom URL> <requested changes>
 @Boerner Publisher lösche <newsroom URL>
 @Boerner Publisher okay publish
@@ -29,7 +32,18 @@ current draft, create/revise drafts, generate/edit/upload covers, prepare live
 updates/deletion, show previews, confirm, and cancel. It has no direct repository
 write function. Briefs, article text, and sources are untrusted data. Error
 reports and management requests cannot pass the separate new-article intent gate.
-Ambiguous article targets require clarification.
+Ambiguous article targets require clarification. The current article's slug is
+available through `read_draft`, including after publication, so a cover change
+in its thread can prepare a live update without asking for the URL again.
+
+The editor receives explicit metadata indicating whether an image is attached
+or available from an earlier mention in that thread. The most recent upload is
+remembered for 24 hours, scoped to its thread and uploader. Private Slack file
+URLs are kept out of model inputs; the image worker downloads the actual pixels
+with the existing authenticated Slack adapter. An uploaded cover is used directly
+without image generation. A generation prompt creates a new image; an edit prompt
+can modify either the current cover or the uploaded picture. Mention the bot when
+uploading and in each follow-up; ordinary unmentioned replies are not delivered.
 
 ## Slack preview and confirmation
 
@@ -70,7 +84,10 @@ Draft preparation uses durable background Responses API jobs and a bounded
 function-calling loop. Image changes use the Responses image-generation tool and
 an accessible caption describing the generated image. Default initial covers
 remain locally rendered editorial artwork unless a different image is requested.
-Research without sources or invalid MDX stops before a review is offered.
+Research is optional context. Supplied articles can skip it; empty sources,
+partial results, service errors and research timeouts do not block a preview.
+Available citations are preserved and missing citations are not invented.
+Invalid MDX still stops before a review is offered.
 
 ## Ownership and configuration
 
@@ -131,6 +148,7 @@ through its deployment environment. Each function stays within its configured
 ## Verification
 
 ```bash
+npm run test:publisher-images  # focused uploaded-image and generated-cover checks
 npm run test:publisher-agent   # focused conversational editor and approval checks
 npm run test:publisher         # offline regression tests; no external writes
 npm run typecheck

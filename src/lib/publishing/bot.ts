@@ -24,7 +24,7 @@ const HELP = [
   'Create: `new blog post <brief>` or `write an article <brief>`.',
   'Update: `update <article-slug or newsroom URL> <changes>` or `aktualisiere …`.',
   'Delete: `delete <article-slug or newsroom URL>` or `lösche …`.',
-  'Mention me in the same thread to edit: “make the intro shorter”, “ändere die Überschrift”, or “use a photo of Frankfurt for the cover”. I can edit drafts and prepare changes to live articles.',
+  'Mention me in the same thread to edit: “make the intro shorter”, “ändere die Überschrift”, or “generate a photo of Frankfurt for the cover”. Attach a picture and say “use this as the cover”, or refer to your last uploaded picture in a follow-up within 24 hours. I can edit drafts and prepare changes to live articles.',
   'Every revision gets a fresh preview. Confirm with its button or say “okay publish” / “ja veröffentlichen”. Cancel with its button or say “abbrechen”. Mention me in each follow-up; the current Slack installation delivers mentions.',
   'Use `preview <review-id>` or `status <review-id>` to check a request. Previews expire after 24 hours.',
 ].join('\n\n');

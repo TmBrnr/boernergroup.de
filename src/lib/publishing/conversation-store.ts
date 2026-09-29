@@ -1,4 +1,6 @@
 import type { StateAdapter } from 'chat';
+import type { QueuedImage } from './agent-schema';
+import { UPLOADED_IMAGE_TTL_MS, type UploadedImage } from './image-context';
 
 const TTL = 7 * 24 * 60 * 60 * 1_000;
 export type Conversation = {
@@ -17,6 +19,13 @@ export function conversationStore(state: StateAdapter) {
   return {
     get,
     save,
+    async rememberImage(threadId: string, userId: string, cover: QueuedImage) {
+      await state.set(`conversation-image:${threadId}:${userId}`, { cover, uploadedAt: Date.now() } satisfies UploadedImage, UPLOADED_IMAGE_TTL_MS);
+    },
+    async recentImage(threadId: string, userId: string): Promise<QueuedImage | undefined> {
+      const image = await state.get<UploadedImage>(`conversation-image:${threadId}:${userId}`);
+      return image && image.uploadedAt + UPLOADED_IMAGE_TTL_MS > Date.now() ? image.cover : undefined;
+    },
     async locked<T>(threadId: string, operation: () => Promise<T>): Promise<T> {
       const lock = await state.acquireLock(`conversation-lock:${threadId}`, 120_000);
       if (!lock) throw new Error('This conversation is processing another change. Please try again shortly.');

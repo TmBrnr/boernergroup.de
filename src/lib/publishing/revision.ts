@@ -54,7 +54,7 @@ export async function processRevision(job: RevisionJob) {
     await state.set(key, revision, TTL);
     if (job.coverMode !== 'keep') {
       if (job.coverMode === 'upload' || job.coverMode === 'abstract') {
-        if (job.coverMode === 'upload' && !job.cover) throw new Error('Attach an image to the message requesting the cover change.');
+        if (job.coverMode === 'upload' && !job.cover) throw new Error('Attach an image and mention me to use it as the cover.');
         const cover = job.coverMode === 'upload' ? await readQueuedCover(job.cover!, base.threadId) : await createGeneratedCover({ ...base.draft, title: `${base.title}: ${job.instructions}` });
         revision.coverBase64 = storedCover(cover);
         if (job.coverMode === 'abstract') {
@@ -65,7 +65,14 @@ export async function processRevision(job: RevisionJob) {
         const response = await startCoverCaption(cover.dataUrl, config, job.context.jobId);
         await next('revision-caption-poll', response.id); return;
       }
-      const response = await startCoverImage(`${base.title}. ${job.instructions}`, job.coverMode === 'edit' ? restoreCover(base).dataUrl : undefined, config, job.context.jobId);
+      let source: string | undefined;
+      if (job.coverMode === 'edit') {
+        if (job.coverSource === 'upload') {
+          if (!job.cover) throw new Error('The uploaded image is missing. Attach it again.');
+          source = (await readQueuedCover(job.cover, base.threadId)).dataUrl;
+        } else source = restoreCover(base).dataUrl;
+      }
+      const response = await startCoverImage(`${base.title}. ${job.instructions}`, source, config, job.context.jobId);
       await next('revision-image-poll', response.id); return;
     }
     if (job.research) {

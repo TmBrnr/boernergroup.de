@@ -6,7 +6,7 @@ export const agentJobSchema = z.discriminatedUnion('stage', [
   z.object({ stage: z.literal('agent-poll'), context, responseId: z.string(), step: z.number().int().nonnegative(), pollCount: z.number().int().nonnegative() }),
 ]);
 export const revisionJobSchema = z.discriminatedUnion('stage', [
-  z.object({ stage: z.literal('revision-start'), context, baseReviewId: z.string(), instructions: z.string().min(1).max(4_000), research: z.boolean(), coverMode: z.enum(['keep', 'generate', 'edit', 'upload', 'abstract']), cover: queuedImageSchema.optional() }),
+  z.object({ stage: z.literal('revision-start'), context, baseReviewId: z.string(), instructions: z.string().min(1).max(4_000), research: z.boolean(), coverMode: z.enum(['keep', 'generate', 'edit', 'upload', 'abstract']), coverSource: z.enum(['current', 'upload']).default('current'), cover: queuedImageSchema.optional() }),
   ...(['revision-research-poll', 'revision-text-poll', 'revision-image-poll', 'revision-caption-poll'] as const).map((stage) => z.object({ stage: z.literal(stage), context, baseReviewId: z.string(), responseId: z.string(), pollCount: z.number().int().nonnegative() })),
 ]);
 export type AgentJob = z.infer<typeof agentJobSchema>;

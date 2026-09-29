@@ -2,6 +2,7 @@ import 'server-only';
 import { createHash } from 'node:crypto';
 import type OpenAI from 'openai';
 import { agentArguments, hasCreationIntent, canConfirmSeenPreview, type AgentToolName } from './agent-contract';
+import { coverForOperation, editorMessage } from './image-context';
 import { pollAgentResponse, startAgentResponse } from './agent-openai';
 import type { AgentJob, AgentContext, QueuedImage } from './agent-schema';
 import { prepareArticle, prepareCover } from './article';
@@ -15,7 +16,7 @@ import { postReviewPreview } from './review-card';
 import { decideStoredReview, getConversationStore, getReviewStore, storedCover } from './reviews';
 
 const TTL = 24 * 60 * 60 * 1000;
-type Turn = { input: OpenAI.Responses.ResponseInputItem[]; text: string; seenReviewId: string | null; cover?: QueuedImage };
+type Turn = { input: OpenAI.Responses.ResponseInputItem[]; text: string; seenReviewId: string | null; cover?: QueuedImage; recentCover?: QueuedImage };
 export async function cancelConversation(threadId: string, userId: string) {
   if (!canManageArticles(getPublishingConfig(), userId)) throw new Error('Not authorised.');
   const conversations = await getConversationStore();
@@ -65,7 +66,7 @@ async function executeTool(name: AgentToolName, raw: unknown, turn: Turn, contex
     const article = await readPublishedArticle(slug, config);
     return { slug, metadata: article.data, body: article.content };
   }
-  if (name === 'read_draft') return review ? { id: review.id, kind: review.kind, status: review.status, draft: review.draft, sources: review.sources, hasCover: Boolean(review.coverBase64), previewShownBeforeThisMessage: review.id === turn.seenReviewId, busy: Boolean(current.busyJobId) } : { status: current.busyJobId ? 'preparing' : 'no draft' };
+  if (name === 'read_draft') return review ? { id: review.id, kind: review.kind, status: review.status, slug: review.slug, draft: review.draft, sources: review.sources, hasCover: Boolean(review.coverBase64), previewShownBeforeThisMessage: review.id === turn.seenReviewId, busy: Boolean(current.busyJobId) } : { status: current.busyJobId ? 'preparing' : 'no draft' };
   if (name === 'cancel_preview') {
     const result = await cancelConversation(context.threadId, context.requestedBy);
     await thread.post(result);
@@ -110,13 +111,16 @@ async function executeTool(name: AgentToolName, raw: unknown, turn: Turn, contex
   }
   if (!review || review.kind === 'delete' || review.status !== 'pending' || review.expiresAt <= Date.now()) throw new Error('There is no current editable draft. Prepare an update or a new article first.');
   const edit = name === 'revise_draft' ? agentArguments.revise_draft.parse(raw) : agentArguments.change_cover.parse(raw);
+  const coverMode = 'mode' in edit ? edit.mode : 'keep';
+  const coverSource = 'source' in edit ? edit.source ?? 'current' : 'current';
+  const cover = coverForOperation(coverMode, coverSource, turn.cover, turn.recentCover);
   await busy();
   await reviews.locked(review.id, async () => {
     const fresh = await reviews.get(review.id);
     if (fresh?.status !== 'pending') throw new Error('The draft changed. Use its latest preview.');
     await reviews.save({ ...fresh, status: 'editing' });
   });
-  await enqueueJob({ stage: 'revision-start', context: operation, baseReviewId: review.id, instructions: 'instructions' in edit ? edit.instructions : edit.prompt, research: 'research' in edit ? edit.research : false, coverMode: 'mode' in edit ? edit.mode : 'keep', cover: turn.cover } as import('./agent-schema').RevisionJob);
+  await enqueueJob({ stage: 'revision-start', context: operation, baseReviewId: review.id, instructions: 'instructions' in edit ? edit.instructions : edit.prompt, research: 'research' in edit ? edit.research : false, coverMode, coverSource, cover } as import('./agent-schema').RevisionJob);
   return { status: 'revision queued; old approval invalid; await fresh preview' };
 }
 
@@ -140,7 +144,11 @@ export async function processAgent(job: AgentJob) {
       if (fresh.busyTurnId && fresh.busyTurnId !== job.context.jobId) throw new Error('Another conversation turn started.');
       await conversations.save(job.context.threadId, { ...fresh, busyTurnId: job.context.jobId });
     });
-    turn = turn ?? { input: [...current.history, { role: 'user', content: job.text }], text: job.text, cover: job.cover, seenReviewId: job.seenReviewId };
+    if (!turn) {
+      if (job.cover) await conversations.rememberImage(job.context.threadId, job.context.requestedBy, job.cover);
+      const recentCover = await conversations.recentImage(job.context.threadId, job.context.requestedBy);
+      turn = { input: [...current.history, { role: 'user', content: editorMessage(job.text, job.cover, recentCover) }], text: job.text, cover: job.cover, recentCover, seenReviewId: job.seenReviewId };
+    }
     await state.set(key, turn, TTL);
     const response = await startAgentResponse(turn.input, config, job.context.jobId);
     await enqueueJob({ stage: 'agent-poll', context: job.context, responseId: response.id, step: 0, pollCount: 0 } as AgentJob, 5); return;
