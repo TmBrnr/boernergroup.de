@@ -6,7 +6,7 @@ export const agentArguments = {
   list_articles: z.object({}).strict(),
   read_article: z.object({ slug: z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/) }).strict(),
   read_draft: z.object({}).strict(),
-  create_draft: z.object({ brief: z.string().min(20).max(16_000) }).strict(),
+  create_draft: z.object({ brief: z.string().min(20).max(16_000), research: z.boolean().optional() }).strict(),
   revise_draft: z.object({ instructions: z.string().min(1).max(4_000), research: z.boolean() }).strict(),
   change_cover: z.object({ prompt: z.string().min(5).max(2_000), mode: z.enum(['generate', 'edit', 'upload', 'abstract']) }).strict(),
   prepare_update: z.object({ slug: z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/) }).strict(),
@@ -20,7 +20,7 @@ const descriptions: Record<AgentToolName, string> = {
   list_articles: 'List live article slugs from the repository. Use this to find the right article, never invent a slug.',
   read_article: 'Read a live article, including title, body, and cover path. This does not edit it.',
   read_draft: 'Read the active preview and its status in this conversation. Use before revising or discussing it.',
-  create_draft: 'Research and prepare a NEW article when the user clearly asks for one. Never turn error reports or management requests into articles. No publication occurs.',
+  create_draft: 'Prepare a NEW article when the user clearly asks for one. Set research=false when formatting or adapting a supplied article, or when the user asks to skip research. Set research=true when writing from a topic that could benefit from web context. Research is optional and never blocks a preview. Never turn error reports or management requests into articles. No publication occurs.',
   revise_draft: 'Revise the active draft according to the user’s instructions, preserving unaffected text and its cover. Set research=true for new factual claims. Old approval becomes invalid; a fresh preview will be sent.',
   change_cover: 'Change only the active draft cover. generate makes a new AI image; edit modifies its existing image; upload uses the image attached to THIS user message; abstract renders local editorial artwork. Text is preserved. A fresh preview requires new confirmation.',
   prepare_update: 'Copy an existing live article into an editable preview, preserving URL, publication date, text, and cover. Then use revise_draft/change_cover as needed. Never commits directly.',
@@ -31,7 +31,8 @@ const descriptions: Record<AgentToolName, string> = {
 };
 export const agentTools: OpenAI.Responses.FunctionTool[] = Object.entries(agentArguments).map(([name, schema]) => ({
   type: 'function', name, description: descriptions[name as AgentToolName], strict: true,
-  parameters: z.toJSONSchema(schema) as Record<string, unknown>,
+  // Require an explicit research choice for new model calls while accepting older queued calls.
+  parameters: { ...z.toJSONSchema(schema), required: Object.keys(schema.shape) } as Record<string, unknown>,
 }));
 
 export function isExplicitConfirmation(text: string, kind: 'create' | 'update' | 'delete'): boolean {
@@ -61,6 +62,7 @@ export const AGENT_INSTRUCTIONS = [
   'Never interpret a broken-link report, pasted 404 page, refusal, question about deleting, or complaint as a new article brief.',
   'Never call confirm_preview after an edit, new cover, new draft, or deletion preview in the same turn, even if the user says to publish after your changes. Show the new preview and ask for fresh confirmation.',
   'When the user wants to edit a draft, read_draft and preserve its subject, unaffected sections, factual citations, and existing cover unless an image change was requested.',
+  'For a new draft made from supplied article text or when asked to skip research, use create_draft with research=false. Use research=true for a topic that benefits from current web context. Missing research or sources never prevents a preview.',
   'For factual additions use revise_draft with research=true. For tone, wording, structure, or title changes use research=false.',
   'When a user attaches an image and asks to use it, use change_cover with mode=upload. For changes to the current image use mode=edit. For a wholly new image use generate. Do not claim you changed an image unless the function succeeded.',
   'A queued preparation is still in progress. Tell the user a new preview will appear, never claim it is already published or live.',

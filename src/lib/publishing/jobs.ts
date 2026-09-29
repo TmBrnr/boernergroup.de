@@ -13,6 +13,7 @@ import { canManageArticles, getPublishingConfig } from './config';
 import { isChangeLive } from './deployment';
 import { friendlyError } from './errors';
 import { deleteArticle, publishArticle, readPublishedArticle } from './github';
+import { MAX_RESEARCH_POLL_COUNT, normalizeResearchContext, type ResearchResult } from './research-result';
 import { pollDraftArticle, pollResearchTopic, startDraftArticle, startResearchTopic } from './openai';
 import { postReviewPreview } from './review-card';
 import { getReviewStore, restoreCover, storedCover, ReviewBusyError, type Review } from './reviews';
@@ -32,12 +33,12 @@ const attachmentSchema = z.object({
   mimeType: z.string().optional(), size: z.number().int().nonnegative().optional(), width: z.number().int().positive().optional(),
   height: z.number().int().positive().optional(), fetchMetadata: z.record(z.string(), z.string()).optional(),
 });
-const researchSchema = z.object({ brief: z.string(), sources: z.array(z.string()) });
+const researchSchema = z.preprocess(normalizeResearchContext, z.object({ brief: z.string(), sources: z.array(z.string()) }));
 const targetSchema = z.object({ slug: slugSchema, sha: z.string(), raw: z.string() });
 const draftingFields = { context: contextSchema, request: z.string().min(1).max(MAX_BRIEF_LENGTH), cover: attachmentSchema.optional(), slug: slugSchema.optional() };
 const pollingFields = { ...draftingFields, target: targetSchema.optional(), responseId: z.string().min(1), pollCount: z.number().int().nonnegative() };
 const publishingJobSchema = z.discriminatedUnion('stage', [
-  z.object({ stage: z.literal('publish-start'), ...draftingFields }),
+  z.object({ stage: z.literal('publish-start'), ...draftingFields, research: z.boolean().default(true) }),
   z.object({ stage: z.literal('research-poll'), ...pollingFields }),
   z.object({ stage: z.literal('draft-poll'), ...pollingFields, research: researchSchema }),
   z.object({ stage: z.literal('delete-preview'), context: contextSchema, slug: slugSchema }),
@@ -51,7 +52,7 @@ export type PublishingJobContext = z.infer<typeof contextSchema>;
 
 const enqueue = enqueueJob;
 
-export async function enqueuePublishingJob(input: { context: PublishingJobContext; request: string; cover?: QueuedCover; slug?: string }) {
+export async function enqueuePublishingJob(input: { context: PublishingJobContext; request: string; cover?: QueuedCover; slug?: string; research?: boolean }) {
   await enqueue({ stage: 'publish-start', ...input });
 }
 export async function enqueueDeletionJob(input: { context: PublishingJobContext; slug: string }) {
@@ -157,28 +158,34 @@ async function processJob(job: PublishingJob): Promise<void> {
     return;
   }
 
+  const prepareDraft = async (research: ResearchResult, target?: z.infer<typeof targetSchema>) => {
+    await thread.post(research.sources.length
+      ? `Research context ready with ${research.sources.length} source${research.sources.length === 1 ? '' : 's'}. Preparing the draft for your review.`
+      : 'Preparing the draft from your supplied content. No additional research sources are available.');
+    const preparedCover = job.cover ? await readQueuedCover(job.cover, job.context.threadId) : undefined;
+    const request = target ? `${job.request}\n\nRevise this existing article, preserving content unaffected by the requested changes:\n${target.raw}` : job.request;
+    const response = await startDraftArticle({ request, research, coverDataUrl: preparedCover?.dataUrl, config, idempotencyKey: job.context.jobId });
+    await enqueue({ stage: 'draft-poll', context: job.context, request: job.request, cover: job.cover, slug: job.slug, target, research, responseId: response.id, pollCount: 0 });
+  };
   if (job.stage === 'publish-start') {
-    const target = job.slug ? await readPublishedArticle(job.slug, config) : undefined;
+    const existing = job.slug ? await readPublishedArticle(job.slug, config) : undefined;
+    const target = existing && { slug: job.slug!, sha: existing.sha, raw: existing.raw };
+    if (!job.research) { await prepareDraft(normalizeResearchContext(undefined), target); return; }
     const request = target ? `${job.request}\n\nRevise the existing article below. Keep its subject and any content unaffected by the requested changes.\n\n${target.raw}` : job.request;
     const response = await startResearchTopic(request, config, job.context.jobId);
-    await enqueue({ stage: 'research-poll', context: job.context, request: job.request, cover: job.cover, slug: job.slug, target: target && { slug: job.slug!, sha: target.sha, raw: target.raw }, responseId: response.id, pollCount: 0 }, POLL_DELAY_SECONDS);
+    if (!response) { await prepareDraft(normalizeResearchContext(undefined), target); return; }
+    await enqueue({ stage: 'research-poll', context: job.context, request: job.request, cover: job.cover, slug: job.slug, target, responseId: response.id, pollCount: 0 }, POLL_DELAY_SECONDS);
+    return;
+  }
+  if (job.stage === 'research-poll') {
+    const research = await pollResearchTopic(job.responseId, config, job.pollCount >= MAX_RESEARCH_POLL_COUNT);
+    if (!research) { await enqueue({ ...job, pollCount: job.pollCount + 1 }, POLL_DELAY_SECONDS); return; }
+    await prepareDraft(research, job.target);
     return;
   }
   if (job.pollCount >= MAX_POLL_COUNT) throw new Error('OpenAI did not finish the background response before the preview deadline.');
-  if (job.stage === 'research-poll') {
-    const research = await pollResearchTopic(job.responseId, config);
-    if (!research) { await enqueue({ ...job, pollCount: job.pollCount + 1 }, POLL_DELAY_SECONDS); return; }
-    if (!research.sources.length) throw new Error('Research returned no sources. No article was prepared or published. Please send a clearer brief.');
-    await thread.post(`Research complete with ${research.sources.length} source${research.sources.length === 1 ? '' : 's'}. Preparing the draft for your review.`);
-    const preparedCover = job.cover ? await readQueuedCover(job.cover, job.context.threadId) : undefined;
-    const request = job.target ? `${job.request}\n\nRevise this existing article, preserving content unaffected by the requested changes:\n${job.target.raw}` : job.request;
-    const response = await startDraftArticle({ request, research, coverDataUrl: preparedCover?.dataUrl, config, idempotencyKey: job.context.jobId });
-    await enqueue({ ...job, stage: 'draft-poll', research, responseId: response.id, pollCount: 0 }, POLL_DELAY_SECONDS);
-    return;
-  }
   const generated = await pollDraftArticle(job.responseId, config);
   if (!generated) { await enqueue({ ...job, pollCount: job.pollCount + 1 }, POLL_DELAY_SECONDS); return; }
-  if (!job.research.sources.length) throw new Error('Research returned no sources. No article was prepared or published. Please send a clearer brief.');
   const draft = job.cover ? generated : { ...generated, coverAlt: generatedCoverAlt(generated) };
   const cover = job.cover ? await readQueuedCover(job.cover, job.context.threadId) : await createGeneratedCover(draft);
   const article = prepareArticle(draft, { slug: job.target?.slug, originalRaw: job.target?.raw, operationId: job.context.jobId });

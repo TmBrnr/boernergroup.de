@@ -8,6 +8,7 @@ import { getPublishingChat } from './chat';
 import { getPublishingConfig } from './config';
 import { readQueuedCover } from './jobs';
 import { startDraftArticle, pollDraftArticle, startResearchTopic, pollResearchTopic, type ResearchResult } from './openai';
+import { MAX_RESEARCH_POLL_COUNT, normalizeResearchContext } from './research-result';
 import { enqueueJob } from './queue';
 import { postReviewPreview } from './review-card';
 import { getConversationStore, getReviewStore, restoreCover, storedCover } from './reviews';
@@ -27,6 +28,12 @@ export async function processRevision(job: RevisionJob) {
   const thread = getPublishingChat().thread(job.context.threadId);
   const next = async (stage: string, responseId: string) => enqueueJob({ stage, context: job.context, baseReviewId: base.id, responseId, pollCount: 0 } as RevisionJob, 10);
   let revision = await state.get<Revision>(key);
+  if (revision) revision.research = normalizeResearchContext(revision.research);
+  const startText = async (result: Revision) => {
+    await state.set(key, result, TTL);
+    const response = await startDraftArticle({ request: `${result.instructions}\n\nRevise this draft, preserving unaffected content, title, categories and cover alt:\n${JSON.stringify(base.draft)}`, research: result.research, config, idempotencyKey: job.context.jobId });
+    await next('revision-text-poll', response.id);
+  };
   const finish = async (result: Revision) => {
     if (await conversations.cancelled(job.context.jobId)) return;
     const article = prepareArticle(result.draft, { slug: base.kind === 'update' ? base.slug : undefined, originalRaw: base.originalRaw, operationId: job.context.jobId });
@@ -63,22 +70,18 @@ export async function processRevision(job: RevisionJob) {
     }
     if (job.research) {
       const response = await startResearchTopic(`${job.instructions}\n\nExisting article:\n${base.draft.body}`, config, job.context.jobId);
-      await next('revision-research-poll', response.id); return;
+      if (response) { await next('revision-research-poll', response.id); return; }
     }
-    const response = await startDraftArticle({ request: `${job.instructions}\n\nRevise this draft, preserving unaffected content, title, categories and cover alt:\n${JSON.stringify(base.draft)}`, research: revision.research, config, idempotencyKey: job.context.jobId });
-    await next('revision-text-poll', response.id); return;
+    await startText(revision); return;
   }
   if (!revision) throw new Error('Revision state expired. Request the change again.');
-  if (!('pollCount' in job) || job.pollCount >= 54) throw new Error('The revision did not finish before the preview deadline.');
+  if (!('pollCount' in job) || (job.stage !== 'revision-research-poll' && job.pollCount >= 54)) throw new Error('The revision did not finish before the preview deadline.');
   const retry = () => enqueueJob({ ...job, pollCount: job.pollCount + 1 }, 10);
   if (job.stage === 'revision-research-poll') {
-    const research = await pollResearchTopic(job.responseId, config);
+    const research = await pollResearchTopic(job.responseId, config, job.pollCount >= MAX_RESEARCH_POLL_COUNT);
     if (!research) { await retry(); return; }
-    if (!research.sources.length) throw new Error('No sources were found for the requested factual additions.');
-    revision.research = { brief: research.brief, sources: [...new Set([...base.sources, ...research.sources])] };
-    await state.set(key, revision, TTL);
-    const response = await startDraftArticle({ request: `${revision.instructions}\n\nPreserve unaffected content:\n${JSON.stringify(base.draft)}`, research: revision.research, config, idempotencyKey: job.context.jobId });
-    await next('revision-text-poll', response.id); return;
+    revision.research = { brief: research.brief || revision.research.brief, sources: [...new Set([...base.sources, ...research.sources])] };
+    await startText(revision); return;
   }
   if (job.stage === 'revision-text-poll') {
     const draft = await pollDraftArticle(job.responseId, config);

@@ -82,7 +82,8 @@ async function executeTool(name: AgentToolName, raw: unknown, turn: Turn, contex
   if (name === 'create_draft') {
     if (!hasCreationIntent(turn.text)) throw new Error('The current message must explicitly request a new article. Error reports are not article briefs.');
     await busy();
-    await enqueuePublishingJob({ context: operation, request: agentArguments.create_draft.parse(raw).brief, cover: turn.cover });
+    const { brief, research } = agentArguments.create_draft.parse(raw);
+    await enqueuePublishingJob({ context: operation, request: brief, research: research ?? true, cover: turn.cover });
     return { status: 'draft preparation queued; await preview' };
   }
   if (name === 'prepare_delete') {
