@@ -201,7 +201,7 @@ export async function processPublishingJob(payload: unknown, metadata: MessageMe
     console.error('Discarding invalid or obsolete publishing queue payload', parsed.error.flatten());
     return;
   }
-  console.info('Publishing queue stage started', { jobId: parsed.data.context.jobId, stage: parsed.data.stage, deliveryCount: metadata.deliveryCount });
+  console.info('Publishing queue stage started', { jobId: parsed.data.context.jobId, stage: parsed.data.stage, responseId: 'responseId' in parsed.data ? parsed.data.responseId : undefined, deliveryCount: metadata.deliveryCount });
   try {
     const agent = agentJobSchema.safeParse(parsed.data);
     const revision = revisionJobSchema.safeParse(parsed.data);
@@ -212,7 +212,7 @@ export async function processPublishingJob(payload: unknown, metadata: MessageMe
     } else await processJob(publishingJobSchema.parse(parsed.data));
     console.info('Publishing queue stage finished', { jobId: parsed.data.context.jobId, stage: parsed.data.stage });
   } catch (error) {
-    console.error('Publishing queue job failed', { jobId: parsed.data.context.jobId, stage: parsed.data.stage, deliveryCount: metadata.deliveryCount, error });
+    console.error('Publishing queue job failed', { jobId: parsed.data.context.jobId, stage: parsed.data.stage, responseId: 'responseId' in parsed.data ? parsed.data.responseId : undefined, deliveryCount: metadata.deliveryCount, error });
     if (error instanceof ReviewBusyError || metadata.deliveryCount < 3) throw error;
     const revision = revisionJobSchema.safeParse(parsed.data);
     if (revision.success) await failRevision(revision.data);

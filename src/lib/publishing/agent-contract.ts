@@ -44,7 +44,10 @@ export function isExplicitConfirmation(text: string, kind: 'create' | 'update' |
 }
 
 export function hasCreationIntent(text: string): boolean {
-  return /\b(?:new\s+(?:blog\s+)?(?:post|article)|(?:write|create|draft|publish)\s+(?:(?:a|an|new|\d+[ -]word)\s+)*(?:blog\s+)?(?:article|post|analysis)|(?:neuer?|neuen)\s+(?:blogpost|artikel|beitrag)|(?:schreibe|erstelle)\s+(?:(?:einen?|neuen?)\s+)?(?:artikel|blogpost|beitrag))\b/i.test(cleanPrompt(text));
+  const prompt = cleanPrompt(text);
+  return /\b(?:new\s+(?:blog\s+)?(?:post|article)|(?:write|create|draft|publish)\s+(?:(?:a|an|new|\d+[ -]word)\s+)*(?:blog\s+)?(?:article|post|analysis)|(?:neuer?|neuen)\s+(?:blogpost|artikel|beitrag)|(?:schreibe|erstelle)\s+(?:(?:einen?|neuen?)\s+)?(?:artikel|blogpost|beitrag))\b/i.test(prompt)
+    || /\b(?:release|publish|veröffentliche|veroeffentliche|poste)\s+(?:das|dies|diesen text|den text|it|this)\s+(?:im|in den|in the|on the|auf dem)\s+blog\b/i.test(prompt)
+    || /\b(?:als\s+(?:neuen?\s+)?blogartikel|(?:im|in den)\s+blog)\s+(?:anlegen|vorbereiten|erstellen|veröffentlichen)\b/i.test(prompt);
 }
 
 export const AGENT_INSTRUCTIONS = [
