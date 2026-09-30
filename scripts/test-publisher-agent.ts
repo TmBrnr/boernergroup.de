@@ -13,9 +13,9 @@ function memoryState() {
 
 test('natural English and German approval requires a single explicit action', () => {
   for (const phrase of ['okay publish', 'ja veröffentlichen', 'bitte freigeben', '<@BOT> okay publish!', 'confirm update', 'looks good, please publish this version', 'ja, das passt – bitte veröffentlichen', 'kannst du das jetzt veröffentlichen?', 'go live with this version']) assert.ok(isExplicitConfirmation(phrase, 'update'), phrase);
-  for (const phrase of ['okay', 'ja', 'make it shorter and publish', 'nicht veröffentlichen', 'okay publish if it looks good', 'can you publish?', 'publish tomorrow', 'ja löschen', 'update the article', 'please publish after changing the image', 'I shouldn\'t publish this', 'publish a new article about AI', 'publish it?', 'fix the typo then publish', 'I would publish this draft']) assert.equal(isExplicitConfirmation(phrase, 'create'), false, phrase);
+  for (const phrase of ['okay', 'ja', 'make it shorter and publish', 'nicht veröffentlichen', 'okay publish if it looks good', 'can you publish?', 'publish tomorrow', 'ja löschen', 'update the article', 'please publish after changing the image', 'I shouldn\'t publish this', 'publish a new article about AI', 'publish it?', 'fix the typo then publish', 'I would publish this draft', 'Maybe publish it', 'Should we publish?', 'Sollen wir veröffentlichen?', 'Vielleicht veröffentlichen']) assert.equal(isExplicitConfirmation(phrase, 'create'), false, phrase);
   for (const phrase of ['ja löschen', 'bitte den Artikel löschen', 'delete this article', 'remove the article']) assert.ok(isExplicitConfirmation(phrase, 'delete'), phrase);
-  for (const phrase of ['lösche den Text', 'can you delete?', 'delete after I approve']) assert.equal(isExplicitConfirmation(phrase, 'delete'), false, phrase);
+  for (const phrase of ['lösche den Text', 'can you delete?', 'delete after I approve', 'Löschen?', 'Vielleicht löschen']) assert.equal(isExplicitConfirmation(phrase, 'delete'), false, phrase);
   assert.equal(isExplicitConfirmation('okay publish', 'delete'), false);
 });
 
