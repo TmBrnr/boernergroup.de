@@ -8,10 +8,10 @@ No model response can directly publish, overwrite, or delete content.
 
 Mention the bot in a Slack thread, then keep mentioning it in that same thread
 for follow-ups. The installed Slack app receives `app_mention` events; ordinary
-unmentioned replies are not delivered. English and German requests work:
+unmentioned replies are not delivered. English and German free-text requests work; command syntax is optional:
 
 ```text
-@Boerner Publisher new blog post <brief or complete article>
+@Boerner Publisher turn this into a blog post, please: <brief or complete article>
 @Boerner Publisher make the introduction shorter
 @Boerner Publisher ändere die Überschrift und mache den Ton sachlicher
 @Boerner Publisher generate a cover showing the Frankfurt skyline
@@ -22,17 +22,19 @@ unmentioned replies are not delivered. English and German requests work:
 @Boerner Publisher edit the attached picture: remove the background
 @Boerner Publisher update <newsroom URL> <requested changes>
 @Boerner Publisher lösche <newsroom URL>
-@Boerner Publisher okay publish
-@Boerner Publisher ja veröffentlichen
+@Boerner Publisher looks good, please publish this version
+@Boerner Publisher ja, das passt – bitte veröffentlichen
 @Boerner Publisher abbrechen
 ```
 
 The agent has strictly validated functions to list/read live articles, read the
 current draft, create/revise drafts, generate/edit/upload covers, prepare live
 updates/deletion, show previews, confirm, and cancel. It has no direct repository
-write function. Briefs, article text, and sources are untrusted data. Error
-reports and management requests cannot pass the separate new-article intent gate.
-Ambiguous article targets require clarification. The current article's slug is
+write function. Briefs, article text, and sources are untrusted data. The
+editor prepares new drafts from natural requests while treating broken-link
+reports and management requests as distinct tasks. Every draft stays private
+until a separately confirmed preview. Ambiguous article targets require
+clarification. The current article's slug is
 available through `read_draft`, including after publication, so a cover change
 in its thread can prepare a live update without asking for the URL again.
 
@@ -58,8 +60,9 @@ uploading and in each follow-up; ordinary unmentioned replies are not delivered.
    uploaded, or rendered as abstract editorial artwork. Each revision gets a
    fresh review ID and preview. Old approval controls become invalid as soon as
    editing starts. Failed edits retain the previous draft for another attempt.
-3. Confirm the **latest** preview with its button, `okay publish`, or
-   `ja veröffentlichen`. A separate explicit message after the preview is needed.
+3. Confirm the **latest** preview with its button or a clear, natural
+   instruction such as `looks good, please publish this version` or
+   `ja, das passt – bitte veröffentlichen`. A separate explicit message after the preview is needed.
    A request such as “make it shorter and publish” cannot approve the resulting
    unseen revision. Conditional approvals and a plain “okay” are not sufficient.
    Deletion needs explicit deletion approval, such as `ja löschen`, rather than

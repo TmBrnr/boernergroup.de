@@ -1,7 +1,7 @@
 import 'server-only';
 import { createHash } from 'node:crypto';
 import type OpenAI from 'openai';
-import { agentArguments, hasCreationIntent, canConfirmSeenPreview, type AgentToolName } from './agent-contract';
+import { agentArguments, canConfirmSeenPreview, type AgentToolName } from './agent-contract';
 import { coverForOperation, editorMessage } from './image-context';
 import { pollAgentResponse, startAgentResponse } from './agent-openai';
 import type { AgentJob, AgentContext, QueuedImage } from './agent-schema';
@@ -81,7 +81,6 @@ async function executeTool(name: AgentToolName, raw: unknown, turn: Turn, contex
     await postReviewPreview(thread, review, config.siteUrl); return { status: 'preview shown', id: review.id };
   }
   if (name === 'create_draft') {
-    if (!hasCreationIntent(turn.text)) throw new Error('The current message must explicitly request a new article. Error reports are not article briefs.');
     await busy();
     const { brief, research } = agentArguments.create_draft.parse(raw);
     await enqueuePublishingJob({ context: operation, request: brief, research: research ?? true, cover: turn.cover });

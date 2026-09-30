@@ -36,19 +36,22 @@ export const agentTools: OpenAI.Responses.FunctionTool[] = Object.entries(agentA
 }));
 
 export function isExplicitConfirmation(text: string, kind: 'create' | 'update' | 'delete'): boolean {
-  const value = cleanPrompt(text).toLowerCase().replace(/[.!?,]+/g, ' ').replace(/\s+/g, ' ').trim();
-  const approval = '(?:(?:ok|okay|yes|ja|passt|looks good|sieht gut aus)\\s+)?(?:(?:please|bitte)\\s+)?';
-  const action = kind === 'delete'
-    ? '(?:confirm (?:the )?deletion|delete (?:it|this article)|löschen|lösche (?:ihn|den artikel)|loeschen|löschung bestätigen|loeschung bestaetigen)'
-    : '(?:publish(?: (?:it|this|the article))?|go ahead and publish|confirm(?: (?:the )?(?:publication|update))?|approve(?: (?:it|this draft))?|veröffentlichen|veröffentliche(?: (?:ihn|den artikel))?|veroeffentlichen|freigeben|freigabe|bestätigen|bestaetigen|update (?:it|the article))';
-  return new RegExp(`^${approval}${action}(?:\\s+(?:please|bitte|jetzt|now))?$`, 'i').test(value);
-}
-
-export function hasCreationIntent(text: string): boolean {
-  const prompt = cleanPrompt(text);
-  return /\b(?:new\s+(?:blog\s+)?(?:post|article)|(?:write|create|draft|publish)\s+(?:(?:a|an|new|\d+[ -]word)\s+)*(?:blog\s+)?(?:article|post|analysis)|(?:neuer?|neuen)\s+(?:blogpost|artikel|beitrag)|(?:schreibe|erstelle)\s+(?:(?:einen?|neuen?)\s+)?(?:artikel|blogpost|beitrag))\b/i.test(prompt)
-    || /\b(?:release|publish|veröffentliche|veroeffentliche|poste)\s+(?:das|dies|diesen text|den text|it|this)\s+(?:im|in den|in the|on the|auf dem)\s+blog\b/i.test(prompt)
-    || /\b(?:als\s+(?:neuen?\s+)?blogartikel|(?:im|in den)\s+blog)\s+(?:anlegen|vorbereiten|erstellen|veröffentlichen)\b/i.test(prompt);
+  const value = cleanPrompt(text).toLowerCase().replace(/[.!?,;:]+/g, ' ').replace(/\s+/g, ' ').trim();
+  if (!value || value.length > 240) return false;
+  if (/\?\s*$/.test(cleanPrompt(text)) && /^(?:publish|veröffentlichen|veroeffentlichen|löschen|loeschen|delete)\b/i.test(value)) return false;
+  // Approval must request a website action on the already reviewed snapshot.
+  // Questions, edits, conditions, and delayed instructions still need a new turn.
+  if (/\b(?:not|never|don'?t|do not|shouldn'?t|wouldn'?t|can'?t|mustn'?t|won'?t|no|nicht|kein(?:e|en|er|es)?|niemals|noch nicht|if|when|unless|after|before|only if|later|tomorrow|wenn|falls|sofern|erst|nachdem|bevor|später|morgen|then|danach|anschließend|anschliessend|once|as soon as)\b/i.test(value)) return false;
+  if (/\b(?:change|edit|rewrite|revise|shorten|replace|add|make|fix|correct|adjust|update|format|crop|improve|ändere|aendere|überarbeite|ueberarbeite|kürze|kuerze|tausche|ersetze|ergänze|ergaenze|verbessere|korrigiere|bearbeite|formatiere|schneide)\b/i.test(value) && !/^confirm (?:the )?update$/.test(value)) return false;
+  if (/^(?:how|what|why|when|should|could|would|is it possible|wie|warum|wann|soll|sollte|wäre es möglich|waere es moeglich)\b/i.test(value)) return false;
+  if (/^(?:i would|i'd|ich würde|ich wuerde)\b/i.test(value)) return false;
+  if (/^(?:can you publish|kannst du veröffentlichen|kannst du veroeffentlichen)$/.test(value)) return false;
+  if (/\b(?:new|another|neuen?|weiteren?)\s+(?:blog\s*)?(?:article|post|artikel|beitrag)\b/i.test(value)) return false;
+  if (kind === 'delete') {
+    return /\b(?:delete (?:it|this article|the article|this post|the post)|remove (?:it|this article|the article|this post|the post)|löschen|loeschen|lösche (?:ihn|den artikel|diesen artikel|den beitrag)|loesche (?:ihn|den artikel|diesen artikel|den beitrag)|entferne (?:ihn|den artikel|diesen artikel|den beitrag)|löschung bestätigen|loeschung bestaetigen)\b/i.test(value);
+  }
+  if (/\b(?:delete|remove|löschen|loeschen|lösche|loesche|entfernen|entferne)\b/i.test(value)) return false;
+  return /\b(?:publish|go live|put (?:it|this|the article) live|confirm(?: (?:the )?(?:publication|update))?|approve(?: (?:it|this draft))?|veröffentlichen|veröffentliche|veroeffentlichen|veroeffentliche|freigeben|freigabe|bestätigen|bestaetigen|live schalten|online stellen|stell(?:e)? (?:es|ihn|den artikel) online)\b/i.test(value);
 }
 
 export const AGENT_INSTRUCTIONS = [
@@ -59,7 +62,8 @@ export const AGENT_INSTRUCTIONS = [
   'Use the current thread context. Ask a short question if the article, requested change, or intended action is ambiguous.',
   'When changing a live article, first prepare_update, then revise_draft or change_cover. You may do these in sequence in the same turn.',
   'All website mutations require a separate explicit confirmation of a preview that was already shown before this user message. You have no direct repository mutation tools.',
-  'Never interpret a broken-link report, pasted 404 page, refusal, question about deleting, or complaint as a new article brief.',
+  'Create a draft only when the current user message asks for a new article, or clearly accepts your immediately preceding offer to turn supplied text into one. Natural phrasing is enough: write an article about this, turn this into a blog post, make a post from the above, and equivalent German requests all qualify. A draft is private until separately approved.',
+  'Never interpret a broken-link report, pasted 404 page, refusal, question about deleting, complaint, or ordinary question as a new article brief. If the intent is unclear, ask one concise question. Do not invent an article topic.',
   'Never call confirm_preview after an edit, new cover, new draft, or deletion preview in the same turn, even if the user says to publish after your changes. Show the new preview and ask for fresh confirmation.',
   'When the user wants to edit a draft, read_draft and preserve its subject, unaffected sections, factual citations, and existing cover unless an image change was requested.',
   'For a new draft made from supplied article text or when asked to skip research, use create_draft with research=false. Use research=true for a topic that benefits from current web context. Missing research or sources never prevents a preview.',

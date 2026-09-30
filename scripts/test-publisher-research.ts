@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { normalizeResearchContext, parseResearchResult } from '../src/lib/publishing/research-result';
-import { agentArguments, agentTools, hasCreationIntent } from '../src/lib/publishing/agent-contract';
+import { agentArguments, agentTools } from '../src/lib/publishing/agent-contract';
 import { pollResearchTopic, startResearchTopic, startDraftArticle } from '../src/lib/publishing/openai';
 
 test('missing search action preserves valid message citations', () => {
@@ -28,10 +28,6 @@ test('source collection combines searches, opened pages and citations with valid
   assert.deepEqual(result.sources, ['https://example.com/search', 'https://example.com/page']);
 });
 
-test('reported German blog instructions are recognised while errors and management requests remain excluded', () => {
-  for (const request of ['release das im blog und formatiere das nice!', 'Ja, als Blogartikel vorbereiten.', 'Erstelelle neuen Artikel im Blog anlegen und dafür eine formatierte Vorschau erstellen!']) assert.ok(hasCreationIntent(request), request);
-  for (const request of ['This page does not exist', 'lösche den Artikel wieder', 'und machst du was?', 'ändere das Bild', 'okay publish']) assert.equal(hasCreationIntent(request), false, request);
-});
 
 
 test('absent and partial research context is usable without fabricated sources', () => {

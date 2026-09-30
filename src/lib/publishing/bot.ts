@@ -21,12 +21,9 @@ function getQueuedCover(message: Message): QueuedCover | undefined {
 }
 
 const HELP = [
-  'Create: `new blog post <brief>` or `write an article <brief>`.',
-  'Update: `update <article-slug or newsroom URL> <changes>` or `aktualisiere …`.',
-  'Delete: `delete <article-slug or newsroom URL>` or `lösche …`.',
-  'Mention me in the same thread to edit: “make the intro shorter”, “ändere die Überschrift”, or “generate a photo of Frankfurt for the cover”. Attach a picture and say “use this as the cover”, or refer to your last uploaded picture in a follow-up within 24 hours. I can edit drafts and prepare changes to live articles.',
-  'Every revision gets a fresh preview. Confirm with its button or say “okay publish” / “ja veröffentlichen”. Cancel with its button or say “abbrechen”. Mention me in each follow-up; the current Slack installation delivers mentions.',
-  'Use `preview <review-id>` or `status <review-id>` to check a request. Previews expire after 24 hours.',
+  'Mention me and write normally. I can turn your text or an idea into a draft, revise wording, use an attached image, generate a cover from your description, or prepare an update or deletion for a live article.',
+  'I will show the full preview here. After reviewing it, you can tell me to publish, confirm the button, request changes, or cancel. Every website change needs a separate confirmation of the latest preview.',
+  'Mention me again in each follow-up in the same thread. This Slack installation only delivers @mentions to me.',
 ].join('\n\n');
 
 // A confirmation can only enqueue the exact snapshot shown in its original thread.

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import type { StateAdapter } from 'chat';
-import { canConfirmSeenPreview, agentArguments, agentTools, hasCreationIntent, isExplicitConfirmation } from '../src/lib/publishing/agent-contract';
+import { canConfirmSeenPreview, agentArguments, agentTools, isExplicitConfirmation } from '../src/lib/publishing/agent-contract';
 import { previewParts } from '../src/lib/publishing/preview-text';
 import { conversationStore } from '../src/lib/publishing/conversation-store';
 import { reviewStore, decideStoredReview } from '../src/lib/publishing/review-store';
@@ -12,20 +12,19 @@ function memoryState() {
 }
 
 test('natural English and German approval requires a single explicit action', () => {
-  for (const phrase of ['okay publish', 'ja veröffentlichen', 'bitte freigeben', '<@BOT> okay publish!', 'confirm update']) assert.ok(isExplicitConfirmation(phrase, 'update'), phrase);
-  for (const phrase of ['okay', 'ja', 'make it shorter and publish', 'nicht veröffentlichen', 'okay publish if it looks good', 'can you publish?', 'publish tomorrow', 'ja löschen']) assert.equal(isExplicitConfirmation(phrase, 'create'), false, phrase);
-  assert.ok(isExplicitConfirmation('ja löschen', 'delete'));
+  for (const phrase of ['okay publish', 'ja veröffentlichen', 'bitte freigeben', '<@BOT> okay publish!', 'confirm update', 'looks good, please publish this version', 'ja, das passt – bitte veröffentlichen', 'kannst du das jetzt veröffentlichen?', 'go live with this version']) assert.ok(isExplicitConfirmation(phrase, 'update'), phrase);
+  for (const phrase of ['okay', 'ja', 'make it shorter and publish', 'nicht veröffentlichen', 'okay publish if it looks good', 'can you publish?', 'publish tomorrow', 'ja löschen', 'update the article', 'please publish after changing the image', 'I shouldn\'t publish this', 'publish a new article about AI', 'publish it?', 'fix the typo then publish', 'I would publish this draft']) assert.equal(isExplicitConfirmation(phrase, 'create'), false, phrase);
+  for (const phrase of ['ja löschen', 'bitte den Artikel löschen', 'delete this article', 'remove the article']) assert.ok(isExplicitConfirmation(phrase, 'delete'), phrase);
+  for (const phrase of ['lösche den Text', 'can you delete?', 'delete after I approve']) assert.equal(isExplicitConfirmation(phrase, 'delete'), false, phrase);
   assert.equal(isExplicitConfirmation('okay publish', 'delete'), false);
 });
 
-test('tool arguments are strict and article creation has a separate intent gate', () => {
+test('tool arguments are strict while article creation accepts natural briefs', () => {
   assert.equal(agentTools.length, Object.keys(agentArguments).length);
   assert.ok(agentTools.every((tool) => tool.strict));
   assert.throws(() => agentArguments.change_cover.parse({ prompt: 'a Frankfurt skyline', mode: 'delete' }));
   assert.throws(() => agentArguments.confirm_preview.parse({ slug: 'unseen-article' }));
-  assert.ok(hasCreationIntent('Schreibe einen Artikel über souveräne KI'));
-  assert.ok(hasCreationIntent('new blog post about Frankfurt'));
-  for (const text of ['This page does not exist', 'lösche den Artikel wieder', 'change the image', 'okay publish']) assert.equal(hasCreationIntent(text), false);
+  assert.equal(agentArguments.create_draft.parse({ brief: 'Turn the notes above into a blog post in the same voice.' }).brief.startsWith('Turn'), true);
 });
 
 test('conversation retains context, rejects obsolete completion and records cancellation', async () => {
